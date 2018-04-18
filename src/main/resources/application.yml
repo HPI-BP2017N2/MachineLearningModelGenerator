@@ -1,0 +1,18 @@
+server:
+ port: ${MLMG_PORT}
+
+models:
+ mongodb:
+  host: ${MONGO_IP}
+  port: ${MONGO_PORT}
+  username: ${MONGO_MLMG_USER}
+  password: ${MONGO_MLMG_PW}
+  database: models
+
+matching-results:
+ mongodb:
+  host: ${MONGO_IP}
+  port: ${MONGO_PORT}
+  username: ${MONGO_MLMG_USER}
+  password: ${MONGO_MLMG_PW}
+  database: matchingResults
