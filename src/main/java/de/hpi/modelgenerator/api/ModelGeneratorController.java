@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.FileNotFoundException;
-
 @RestController
 @Slf4j
 @Getter(AccessLevel.PRIVATE)
@@ -20,21 +18,20 @@ import java.io.FileNotFoundException;
 public class ModelGeneratorController {
 
     private final ModelGeneratorService service;
-    private final ParagraphVectorsClassifierExample neuralTrainer;
+    private final ParagraphVectorsClassifierExample categoryClassifier;
 
     @RequestMapping(value = "/train/{shopId}", method = RequestMethod.GET, produces = "application/json")
-    public void doSth(@PathVariable long shopId){
-        try {
-            getNeuralTrainer().makeParagraphVectors(shopId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void train(@PathVariable long shopId){
+        getCategoryClassifier().makeParagraphVectors(shopId);
 
-        try {
-            getNeuralTrainer().checkUnlabeledData();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        getCategoryClassifier().checkUnlabeledData(shopId);
+
+    }
+
+    @RequestMapping(value = "/label/{shopId}", method = RequestMethod.GET)
+    public void label(@PathVariable long shopId){
+        getCategoryClassifier().checkUnlabeledData(shopId);
+
     }
 
 

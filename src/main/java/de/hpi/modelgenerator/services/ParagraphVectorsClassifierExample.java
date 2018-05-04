@@ -5,6 +5,7 @@ import de.hpi.modelgenerator.persistence.ShopOffer;
 import de.hpi.modelgenerator.persistence.repo.OfferRepository;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.deeplearning4j.models.embeddings.inmemory.InMemoryLookupTable;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
@@ -19,11 +20,9 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.primitives.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -44,73 +43,49 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
+@RequiredArgsConstructor
 public class ParagraphVectorsClassifierExample {
 
     private ParagraphVectors paragraphVectors;
     private LabelAwareIterator iterator;
     private TokenizerFactory tokenizerFactory;
+    private List<LabelledDocument> unlabeledOffers;
+    private long currentShopId;
 
-    @Autowired
-    private OfferRepository offerRepository;
+    private final OfferRepository offerRepository;
     private static final Logger log = LoggerFactory.getLogger(ParagraphVectorsClassifierExample.class);
-    private List<LabelledDocument> unlabelledOffers;
 
 
-    public void makeParagraphVectors(long shopId)  throws Exception {
+    public void makeParagraphVectors(long shopId) {
+        setCurrentShopId(shopId);
         List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
-        List<LabelledDocument> labelledOffers = new ArrayList<>();
-        setUnlabelledOffers(new ArrayList<>());
-
-        int offerCount = offers.size();
+        List<LabelledDocument> labeledOffers = new LinkedList<>();
+        setUnlabeledOffers(new LinkedList<>());
+        List<Integer> randoms = getRandomIntegers(offers.size(),  (int)(0.3 * offers.size()));
         int offerIndex = 0;
-        List<Integer> randoms = new ArrayList<>();
 
-        log.info("Given a data set with " +  offerCount + " documents.");
-
-        for(int i = 0; i < 0.3 * offerCount; i++) {
-            boolean numberAlreadyTaken = true;
-            int random = 0;
-            while(numberAlreadyTaken) {
-                random = ThreadLocalRandom.current().nextInt(0, offerCount + 1);
-                numberAlreadyTaken = randoms.contains(random);
-            }
-            randoms.add(random);
-        }
+        log.info("Given a data set with " +  offers.size() + " documents.");
 
         for(ShopOffer offer : offers) {
-            if(offer.getMappedCatalogCategory() == 0){
+            if(offer.getTitles() == null && offer.getDescriptions() == null){
                 offerIndex++;
                 continue;
             }
 
-            LabelledDocument document = new LabelledDocument();
-            String title = "";
-            String description = "";
-
-            for(String key : offer.getTitles().keySet()) {
-                title = offer.getTitles().get(key);
-                break;
-            }
-            for(String key : offer.getDescriptions().keySet()) {
-                description = offer.getDescriptions().get(key);
-                break;
-            }
-
-            document.setContent(title + description);
-            document.addLabel(Long.toString(offer.getMappedCatalogCategory()));
+            LabelledDocument document = getLabelledDocumentFromShopOffer(offer);
 
             if(randoms.contains(offerIndex)) {
-                labelledOffers.add(document);
+                labeledOffers.add(document);
             } else {
-                getUnlabelledOffers().add(document);
+                getUnlabeledOffers().add(document);
             }
             offerIndex++;
         }
 
-        log.info("Use " +  labelledOffers.size() + " documents for training.");
-        log.info("Use " +  getUnlabelledOffers().size() + " documents for validation.");
+        log.info("Use " + labeledOffers.size() + " documents for training.");
+        log.info("Use " + getUnlabeledOffers().size() + " documents for validation.");
 
-        iterator = new SimpleLabelAwareIterator(labelledOffers);
+        iterator = new SimpleLabelAwareIterator(labeledOffers);
         tokenizerFactory = new DefaultTokenizerFactory();
         tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
 
@@ -131,14 +106,18 @@ public class ParagraphVectorsClassifierExample {
         log.info("DONE BUILDING MODEL");
     }
 
-    public void checkUnlabeledData() throws Exception {
+    public void checkUnlabeledData(long shopId) throws IllegalStateException {
+        if(shopId != getCurrentShopId()) {
+            throw new IllegalStateException();
+        }
+
       /*
       At this point we assume that we have model built and we can check
       which categories our unlabeled document falls into.
       So we'll start loading our unlabeled documents and checking them
      */
 
-        LabelAwareIterator unClassifiedIterator = new SimpleLabelAwareIterator(getUnlabelledOffers());
+      LabelAwareIterator unClassifiedIterator = new SimpleLabelAwareIterator(getUnlabeledOffers());
 
      /*
       Now we'll iterate over unlabeled data, and check which label it could be assigned to
@@ -153,38 +132,42 @@ public class ParagraphVectorsClassifierExample {
 
         int rightMatches = 0;
         int wrongMatches = 0;
+        int notLabeled = 0;
+        double labelThreshold = 0.5;
+
+        Set<String> labels = new HashSet<>();
 
         while (unClassifiedIterator.hasNextDocument()) {
             LabelledDocument document = unClassifiedIterator.nextDocument();
             INDArray documentAsCentroid = meansBuilder.documentAsVector(document);
             List<Pair<String, Double>> scores = seeker.getScores(documentAsCentroid);
 
-         /*
-          please note, document.getLabel() is used just to show which document we're looking at now,
-          as a substitute for printing out the whole document name.
-          So, labels on these two documents are used like titles,
-          just to visualize our classification done properly
-         */
-            String bestLabel = getBestScoredLabel(scores);
-            log.info("Document '" + document.getLabels() + "' falls into the following categories: " + bestLabel);
-            for (Pair<String, Double> score: scores) {
+            //log.info("Document '" + document.getLabels() + "' falls into the following categories: " );
+            /*for (Pair<String, Double> score: scores) {
                 log.info("        " + score.getFirst() + ": " + score.getSecond());
-            }
+            }*/
 
-            if(bestLabel.equals(document.getLabels().get(0))){
+            String bestLabel = getBestScoredLabel(scores);
+            if(getBestScore(scores) < labelThreshold) {
+                notLabeled++;
+            } else if(bestLabel.equals(document.getLabels().get(0))){
                 rightMatches++;
             } else {
                 wrongMatches++;
             }
+
+            labels.add(document.getLabels().get(0));
         }
 
         log.info("Right labels: " + rightMatches);
         log.info("Wrong labels: " + wrongMatches);
+        log.info("Not labeled: " + notLabeled);
+        log.info("Different labels: " + labels.size());
 
     }
 
     private String getBestScoredLabel(List<Pair<String, Double>> scores) {
-        String bestLabel = "";
+        String bestLabel = null;
         Double bestScore = Double.MIN_VALUE;
 
         for(Pair<String, Double> score : scores) {
@@ -195,6 +178,53 @@ public class ParagraphVectorsClassifierExample {
         }
 
         return bestLabel;
+    }
+
+    private Double getBestScore(List<Pair<String, Double>> scores) {
+        Double bestScore = Double.MIN_VALUE;
+
+        for(Pair<String, Double> score : scores) {
+            if(score.getSecond() > bestScore) {
+                bestScore = score.getSecond();
+            }
+        }
+
+        return bestScore;
+    }
+
+    private LabelledDocument getLabelledDocumentFromShopOffer(ShopOffer offer) {
+        LabelledDocument document = new LabelledDocument();
+        String title = null;
+        String description = null;
+
+        if(offer.getTitles() != null) {
+            title = offer.getTitles().get(offer.getTitles().keySet().iterator().next());
+        }
+
+
+        if(offer.getDescriptions() != null) {
+            description = offer.getDescriptions().get(offer.getDescriptions().keySet().iterator().next());
+        }
+
+        document.setContent(title + description);
+        document.addLabel(Long.toString(offer.getMappedCatalogCategory()));
+
+        return document;
+    }
+
+    private List<Integer> getRandomIntegers(int range, int numberOfRandoms) {
+        List<Integer> randoms = new ArrayList<>();
+        for(int i = 0; i < numberOfRandoms; i++) {
+            boolean numberAlreadyTaken = true;
+            int random = 0;
+            while(numberAlreadyTaken) {
+                random = ThreadLocalRandom.current().nextInt(0, range + 1);
+                numberAlreadyTaken = randoms.contains(random);
+            }
+            randoms.add(random);
+        }
+
+        return randoms;
     }
 
 
