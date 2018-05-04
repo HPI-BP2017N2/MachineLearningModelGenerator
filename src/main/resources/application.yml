@@ -15,4 +15,8 @@ matching-results:
   port: ${MONGO_PORT}
   username: ${MONGO_MLMG_USER}
   password: ${MONGO_MLMG_PW}
-  database: matchingResults
+  database: cache
+
+cache:
+ uri: ${CACHE_IP}
+ getOfferRoute: "/getOffer/"
