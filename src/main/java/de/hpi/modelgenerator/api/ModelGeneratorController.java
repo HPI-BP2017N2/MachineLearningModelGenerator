@@ -1,7 +1,7 @@
 package de.hpi.modelgenerator.api;
 
 import de.hpi.modelgenerator.services.ModelGeneratorService;
-import de.hpi.modelgenerator.services.ParagraphVectorsClassifierExample;
+import de.hpi.modelgenerator.services.Classifier;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -18,21 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class ModelGeneratorController {
 
     private final ModelGeneratorService service;
-    private final ParagraphVectorsClassifierExample categoryClassifier;
+    private final Classifier categoryClassifier;
 
-    @RequestMapping(value = "/train/{shopId}", method = RequestMethod.GET, produces = "application/json")
-    public void train(@PathVariable long shopId){
-        getCategoryClassifier().makeParagraphVectors(shopId);
-
-        getCategoryClassifier().checkUnlabeledData(shopId);
-
+    @RequestMapping(value = "/trainCategory/{shopId}", method = RequestMethod.GET, produces = "application/json")
+    public void trainCategory(@PathVariable long shopId){
+        getService().classifyByCategory(shopId);
     }
 
-    @RequestMapping(value = "/label/{shopId}", method = RequestMethod.GET)
-    public void label(@PathVariable long shopId){
-        getCategoryClassifier().checkUnlabeledData(shopId);
-
+    @RequestMapping(value = "/trainBrand/{shopId}", method = RequestMethod.GET, produces = "application/json")
+    public void trainBrand(@PathVariable long shopId){
+        getService().classifyByBrand(shopId);
     }
-
-
 }

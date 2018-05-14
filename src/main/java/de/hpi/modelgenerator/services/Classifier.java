@@ -1,11 +1,8 @@
 package de.hpi.modelgenerator.services;
 
 
-import de.hpi.modelgenerator.persistence.ShopOffer;
-import de.hpi.modelgenerator.persistence.repo.OfferRepository;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.deeplearning4j.models.embeddings.inmemory.InMemoryLookupTable;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
@@ -20,7 +17,6 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.primitives.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,11 +36,9 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * @author raver119@gmail.com
  */
-@Service
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
-@RequiredArgsConstructor
-public class ParagraphVectorsClassifierExample {
+public class Classifier {
 
     private ParagraphVectors paragraphVectors;
     private LabelAwareIterator iterator;
@@ -52,29 +46,19 @@ public class ParagraphVectorsClassifierExample {
     private List<LabelledDocument> unlabeledOffers;
     private long currentShopId;
 
-    private final OfferRepository offerRepository;
-    private static final Logger log = LoggerFactory.getLogger(ParagraphVectorsClassifierExample.class);
+    private static final Logger log = LoggerFactory.getLogger(Classifier.class);
 
 
-    public void makeParagraphVectors(long shopId) {
-        setCurrentShopId(shopId);
-        List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
+    public void makeParagraphVectors(List<LabelledDocument> documents) {
         List<LabelledDocument> labeledOffers = new LinkedList<>();
         setUnlabeledOffers(new LinkedList<>());
-        List<Integer> randoms = getRandomIntegers(offers.size(),  (int)(0.3 * offers.size()));
+        List<Integer> randoms = getRandomIntegers(documents.size(),  (int)(0.9 * documents.size()));
         int offerIndex = 0;
 
-        log.info("Given a data set with " +  offers.size() + " documents.");
+        log.info("Given a data set with " +  documents.size() + " documents.");
 
-        for(ShopOffer offer : offers) {
-            if(offer.getTitles() == null && offer.getDescriptions() == null){
-                offerIndex++;
-                continue;
-            }
-
-            LabelledDocument document = getLabelledDocumentFromShopOffer(offer);
-
-            if(randoms.contains(offerIndex)) {
+        for(LabelledDocument document: documents) {
+            if (randoms.contains(offerIndex)) {
                 labeledOffers.add(document);
             } else {
                 getUnlabeledOffers().add(document);
@@ -111,19 +95,7 @@ public class ParagraphVectorsClassifierExample {
             throw new IllegalStateException();
         }
 
-      /*
-      At this point we assume that we have model built and we can check
-      which categories our unlabeled document falls into.
-      So we'll start loading our unlabeled documents and checking them
-     */
-
-      LabelAwareIterator unClassifiedIterator = new SimpleLabelAwareIterator(getUnlabeledOffers());
-
-     /*
-      Now we'll iterate over unlabeled data, and check which label it could be assigned to
-      Please note: for many domains it's normal to have 1 document fall into few labels at once,
-      with different "weight" for each.
-     */
+        LabelAwareIterator unClassifiedIterator = new SimpleLabelAwareIterator(getUnlabeledOffers());
         MeansBuilder meansBuilder = new MeansBuilder(
                 (InMemoryLookupTable<VocabWord>)paragraphVectors.getLookupTable(),
                 tokenizerFactory);
@@ -141,11 +113,6 @@ public class ParagraphVectorsClassifierExample {
             LabelledDocument document = unClassifiedIterator.nextDocument();
             INDArray documentAsCentroid = meansBuilder.documentAsVector(document);
             List<Pair<String, Double>> scores = seeker.getScores(documentAsCentroid);
-
-            //log.info("Document '" + document.getLabels() + "' falls into the following categories: " );
-            /*for (Pair<String, Double> score: scores) {
-                log.info("        " + score.getFirst() + ": " + score.getSecond());
-            }*/
 
             String bestLabel = getBestScoredLabel(scores);
             if(getBestScore(scores) < labelThreshold) {
@@ -192,26 +159,6 @@ public class ParagraphVectorsClassifierExample {
         return bestScore;
     }
 
-    private LabelledDocument getLabelledDocumentFromShopOffer(ShopOffer offer) {
-        LabelledDocument document = new LabelledDocument();
-        String title = null;
-        String description = null;
-
-        if(offer.getTitles() != null) {
-            title = offer.getTitles().get(offer.getTitles().keySet().iterator().next());
-        }
-
-
-        if(offer.getDescriptions() != null) {
-            description = offer.getDescriptions().get(offer.getDescriptions().keySet().iterator().next());
-        }
-
-        document.setContent(title + description);
-        document.addLabel(Long.toString(offer.getMappedCatalogCategory()));
-
-        return document;
-    }
-
     private List<Integer> getRandomIntegers(int range, int numberOfRandoms) {
         List<Integer> randoms = new ArrayList<>();
         for(int i = 0; i < numberOfRandoms; i++) {
@@ -226,6 +173,5 @@ public class ParagraphVectorsClassifierExample {
 
         return randoms;
     }
-
 
 }
