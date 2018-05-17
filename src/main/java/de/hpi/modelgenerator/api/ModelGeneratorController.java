@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class ModelGeneratorController {
 
     private final ModelGeneratorService service;
-    private final Classifier categoryClassifier;
 
     @RequestMapping(value = "/trainCategory/{shopId}", method = RequestMethod.GET, produces = "application/json")
     public void trainCategory(@PathVariable long shopId){
@@ -28,5 +27,10 @@ public class ModelGeneratorController {
     @RequestMapping(value = "/trainBrand/{shopId}", method = RequestMethod.GET, produces = "application/json")
     public void trainBrand(@PathVariable long shopId){
         getService().classifyByBrand(shopId);
+    }
+
+    @RequestMapping(value = "ml", method = RequestMethod.GET, produces = "application/json")
+    public void ml() {
+        getService().ml();
     }
 }

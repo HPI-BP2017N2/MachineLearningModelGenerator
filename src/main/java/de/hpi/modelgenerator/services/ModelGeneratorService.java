@@ -49,6 +49,12 @@ public class ModelGeneratorService {
 
     }
 
+    public void ml(){
+        WEKA weka =  new WEKA();
+        weka.calculateModel();
+        weka.evaluateModel();
+    }
+
     private LabelledDocument getLabelledDocumentByCategoryFromShopOffer(ShopOffer offer) {
         LabelledDocument document = new LabelledDocument();
         String title = null;

@@ -1,8 +1,13 @@
 package de.hpi.modelgenerator.services;
 
+import de.hpi.modelgenerator.persistence.AttributeVector;
+import de.hpi.modelgenerator.persistence.FeatureInstance;
+import de.hpi.modelgenerator.persistence.ParsedOffer;
+import de.hpi.modelgenerator.persistence.ShopOffer;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.bytedeco.javacpp.presets.opencv_core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,7 +19,7 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
-import java.util.ArrayList;
+import java.util.*;
 
 @Service
 @Getter(AccessLevel.PRIVATE)
@@ -45,24 +50,55 @@ public class WEKA {
             eTest.evaluateModel(cModel, isTestingSet);
             String strSummary = eTest.toSummaryString();
             System.out.println(strSummary);
-            System.out.println(eTest.confusionMatrix());
+
+            System.out.println("\nConfusion Matrix: ");
+
+            for(double[] array : eTest.confusionMatrix()) {
+                for(double i : array) {
+                    System.out.printf(String.format("%1$" + 4 + "s", i) + "\t");
+                }
+                System.out.printf("\n");
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
-    public Instances createSet(int count) {
-        ArrayList<Attribute> features = AttributeVectorCreator.createFastVector();
-        Instances isSet = new Instances("Rel", features, 10);
-        isSet.setClassIndex(2);
+    private Instances createSet(int count) {
+        ArrayList<Attribute> features = new AttributeVector();
+        Instances isSet = new Instances("Rel", features, count);
+
+        ShopOffer shopOffer = new ShopOffer();
+        ParsedOffer parsedOffer = new ParsedOffer();
+        Map<String, String> title = new HashMap<>();
+        title.put("0", "iPhone7");
+        shopOffer.setTitles(title);
+        parsedOffer.setTitle("iPhone7");
+        shopOffer.setDescriptions(title);
+        parsedOffer.setTitle("iPhone7");
+        parsedOffer.setBrandName("Apple");
+        shopOffer.setBrandName("Apple");
+        parsedOffer.setPrice("1000");
+        Map<String, Double> price = new HashMap<>();
+        price.put("0", 1000d);
+        shopOffer.setPrices(price);
+        parsedOffer.setPrice("1000");
+        shopOffer.setMappedCatalogCategory("12345");
+        parsedOffer.setCategory("12345");
+        Map<String, String> url = new HashMap<>();
+        url.put("0", "http://example.com/123");
+        shopOffer.setUrls(url);
+        parsedOffer.setUrl("http://example.com/123");
+        shopOffer.setImageId("qwertz");
+        parsedOffer.setImageUrl( "qwerty");
+
         for (int i = 0; i < count; i++) {
-            Instance iExample = new DenseInstance(4);
-            iExample.setValue(features.get(0), 1.0);
-            iExample.setValue(features.get(1), "danial");
-            iExample.setValue(features.get(2), "true");
+            Instance iExample = new FeatureInstance(shopOffer, parsedOffer, true);
             isSet.add(iExample);
         }
+
+        isSet.setClassIndex(features.size() - 1);
         return isSet;
     }
 }
