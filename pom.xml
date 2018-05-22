@@ -22,16 +22,41 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+
+        <!-- Change the nd4j.backend property to nd4j-cuda-8.0-platform, nd4j-cuda-9.0-platform or nd4j-cuda-9.1-platform to use CUDA GPUs -->
+        <nd4j.backend>nd4j-native-platform</nd4j.backend>
+        <!--<nd4j.backend>nd4j-cuda-9.1-platform</nd4j.backend>-->
+        <shadedClassifier>bin</shadedClassifier>
+
+        <nd4j.version>1.0.0-alpha</nd4j.version>
+        <dl4j.version>1.0.0-alpha</dl4j.version>
+        <datavec.version>1.0.0-alpha</datavec.version>
+        <arbiter.version>1.0.0-alpha</arbiter.version>
+        <rl4j.version>1.0.0-alpha</rl4j.version>
+
+        <guava.version>19.0</guava.version>
+        <logback.version>1.1.7</logback.version>
+        <jfreechart.version>1.0.13</jfreechart.version>
+        <jcommon.version>1.0.23</jcommon.version>
+        <maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
+        <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
+        <exec-maven-plugin.version>1.4.0</exec-maven-plugin.version>
+        <maven.minimum.version>3.3.1</maven.minimum.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.9.5</version>
         </dependency>
 
         <dependency>
@@ -44,10 +69,81 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+            <version>1.1.5.RELEASE</version>
+        </dependency>
+
+        <!-- ND4J backend. You need one in every DL4J project. Normally define artifactId as either "nd4j-native-platform" or "nd4j-cuda-7.5-platform" -->
+        <dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>${nd4j.backend}</artifactId>
+            <version>${nd4j.version}</version>
+        </dependency>
+
+        <!-- Core DL4J functionality -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-core</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-nlp</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-zoo</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
+
+        <!-- Arbiter - used for hyperparameter optimization (grid/random search) -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>arbiter-deeplearning4j</artifactId>
+            <version>${arbiter.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>arbiter-ui_2.11</artifactId>
+            <version>${arbiter.version}</version>
+        </dependency>
+
+        <!-- datavec-data-codec: used only in video example for loading video data -->
+        <dependency>
+            <artifactId>datavec-data-codec</artifactId>
+            <groupId>org.datavec</groupId>
+            <version>${datavec.version}</version>
+        </dependency>
+
+        <!-- Used in the feedforward/classification/MLP* and feedforward/regression/RegressionMathFunctions example -->
+        <dependency>
+            <groupId>jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>${jfreechart.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jcommon</artifactId>
+            <version>${jcommon.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/weka-stable -->
+        <dependency>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka-stable</artifactId>
+            <version>3.8.2</version>
         </dependency>
     </dependencies>
 
