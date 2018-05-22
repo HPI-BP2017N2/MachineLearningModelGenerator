@@ -11,12 +11,6 @@ import org.nd4j.linalg.factory.Nd4j;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Simple utility class that builds centroid vector for LabelledDocument
- * based on previously trained ParagraphVectors model
- *
- * @author raver119@gmail.com
- */
 public class MeansBuilder {
     private VocabCache<VocabWord> vocabCache;
     private InMemoryLookupTable<VocabWord> lookupTable;
@@ -28,12 +22,6 @@ public class MeansBuilder {
         this.tokenizerFactory = tokenizerFactory;
     }
 
-    /**
-     * This method returns centroid (mean vector) for document.
-     *
-     * @param document
-     * @return
-     */
     public INDArray documentAsVector(LabelledDocument document) {
         List<String> documentAsTokens = tokenizerFactory.create(document.getContent()).getTokens();
         AtomicInteger cnt = new AtomicInteger(0);

@@ -21,38 +21,21 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * This is basic example for documents classification done with DL4j ParagraphVectors.
- * The overall idea is to use ParagraphVectors in the same way we use LDA:
- * topic space modelling.
- *
- * In this example we assume we have few labeled categories that we can use
- * for training, and few unlabeled documents. And our goal is to determine,
- * which category these unlabeled documents fall into
- *
- *
- * Please note: This example could be improved by using learning cascade
- * for higher accuracy, but that's beyond basic example paradigm.
- *
- * @author raver119@gmail.com
- */
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
-public class Classifier {
+public class NeuralNetClassifier {
 
     private ParagraphVectors paragraphVectors;
-    private LabelAwareIterator iterator;
     private TokenizerFactory tokenizerFactory;
     private List<LabelledDocument> unlabeledOffers;
-    private long currentShopId;
 
-    private static final Logger log = LoggerFactory.getLogger(Classifier.class);
+    private static final Logger log = LoggerFactory.getLogger(NeuralNetClassifier.class);
 
 
-    public void makeParagraphVectors(List<LabelledDocument> documents) {
+    public ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
         List<LabelledDocument> labeledOffers = new LinkedList<>();
         setUnlabeledOffers(new LinkedList<>());
-        List<Integer> randoms = getRandomIntegers(documents.size(),  (int)(0.9 * documents.size()));
+        List<Integer> randoms = getRandomIntegers(documents.size(),  (int)(0.7 * documents.size()));
         int offerIndex = 0;
 
         log.info("Given a data set with " +  documents.size() + " documents.");
@@ -69,39 +52,34 @@ public class Classifier {
         log.info("Use " + labeledOffers.size() + " documents for training.");
         log.info("Use " + getUnlabeledOffers().size() + " documents for validation.");
 
-        iterator = new SimpleLabelAwareIterator(labeledOffers);
-        tokenizerFactory = new DefaultTokenizerFactory();
-        tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
+        setTokenizerFactory(new DefaultTokenizerFactory());
+        getTokenizerFactory().setTokenPreProcessor(new CommonPreprocessor());
 
         // ParagraphVectors training configuration
-        paragraphVectors = new ParagraphVectors.Builder()
+        setParagraphVectors(new ParagraphVectors.Builder()
                 .learningRate(0.025)
                 .minLearningRate(0.001)
                 .batchSize(1000)
                 .epochs(20)
-                .iterate(iterator)
+                .iterate(new SimpleLabelAwareIterator(labeledOffers))
                 .trainWordVectors(true)
-                .tokenizerFactory(tokenizerFactory)
-                .build();
+                .tokenizerFactory(getTokenizerFactory())
+                .build());
 
         // Start model training
-        paragraphVectors.fit();
-
+        getParagraphVectors().fit();
         log.info("DONE BUILDING MODEL");
+
+        return getParagraphVectors();
     }
 
-    public void checkUnlabeledData(long shopId) throws IllegalStateException {
-        if(shopId != getCurrentShopId()) {
-            throw new IllegalStateException();
-        }
-
+    public void checkUnlabeledData() {
         LabelAwareIterator unClassifiedIterator = new SimpleLabelAwareIterator(getUnlabeledOffers());
         MeansBuilder meansBuilder = new MeansBuilder(
-                (InMemoryLookupTable<VocabWord>)paragraphVectors.getLookupTable(),
-                tokenizerFactory);
-        LabelSeeker seeker = new LabelSeeker(iterator.getLabelsSource().getLabels(),
-                (InMemoryLookupTable<VocabWord>) paragraphVectors.getLookupTable());
-
+                (InMemoryLookupTable<VocabWord>)getParagraphVectors().getLookupTable(),
+                getTokenizerFactory());
+        LabelSeeker seeker = new LabelSeeker(getParagraphVectors().getLabelsSource().getLabels(),
+                (InMemoryLookupTable<VocabWord>) getParagraphVectors().getLookupTable());
         int rightMatches = 0;
         int wrongMatches = 0;
         int notLabeled = 0;

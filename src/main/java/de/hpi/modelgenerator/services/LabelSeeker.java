@@ -9,13 +9,6 @@ import org.nd4j.linalg.ops.transforms.Transforms;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This is primitive seeker for nearest labels.
- * It's used instead of basic wordsNearest method because for ParagraphVectors
- * only labels should be taken into account, not individual words
- *
- * @author raver119@gmail.com
- */
 public class LabelSeeker {
     private List<String> labelsUsed;
     private InMemoryLookupTable<VocabWord> lookupTable;
@@ -26,11 +19,6 @@ public class LabelSeeker {
         this.labelsUsed = labelsUsed;
     }
 
-    /**
-     * This method accepts vector, that represents any document,
-     * and returns distances between this document, and previously trained categories
-     * @return
-     */
     public List<Pair<String, Double>> getScores(INDArray vector) {
         List<Pair<String, Double>> result = new ArrayList<>();
         for (String label: labelsUsed) {
