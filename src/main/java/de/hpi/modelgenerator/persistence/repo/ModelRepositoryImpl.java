@@ -26,6 +26,11 @@ public class ModelRepositoryImpl implements ModelRepository {
     }
 
     @Override
+    public void save(ScoredModel model) {
+        getMongoTemplate().save(model);
+    }
+
+    @Override
     public boolean categoryClassifierExists() {
         return classifierExists("category");
     }
