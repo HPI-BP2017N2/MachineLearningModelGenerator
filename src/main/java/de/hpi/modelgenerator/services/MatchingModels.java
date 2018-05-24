@@ -1,6 +1,5 @@
 package de.hpi.modelgenerator.services;
 
-import de.hpi.modelgenerator.dto.ScoredModel;
 import de.hpi.modelgenerator.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

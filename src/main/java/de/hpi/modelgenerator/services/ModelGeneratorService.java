@@ -1,6 +1,6 @@
 package de.hpi.modelgenerator.services;
 
-import de.hpi.modelgenerator.dto.ScoredModel;
+import de.hpi.modelgenerator.persistence.ScoredModel;
 import de.hpi.modelgenerator.persistence.LabeledModel;
 import de.hpi.modelgenerator.persistence.ShopOffer;
 import de.hpi.modelgenerator.persistence.repo.OfferRepository;

@@ -1,6 +1,5 @@
 package de.hpi.modelgenerator.persistence;
 
-import de.hpi.modelgenerator.dto.ScoredModel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

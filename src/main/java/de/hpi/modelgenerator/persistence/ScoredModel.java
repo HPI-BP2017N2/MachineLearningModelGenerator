@@ -1,4 +1,4 @@
-package de.hpi.modelgenerator.dto;
+package de.hpi.modelgenerator.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
