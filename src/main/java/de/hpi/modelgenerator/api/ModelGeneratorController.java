@@ -28,7 +28,7 @@ public class ModelGeneratorController {
 
     private final ClassifierTrainingState modelTrainigState = new ClassifierTrainingState();
 
-    @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.POST)
     public void generateCategoryClassifier() {
         if (!getModelRepository().categoryClassifierExists() && !getCategoryClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
@@ -36,7 +36,7 @@ public class ModelGeneratorController {
         }
     }
 
-    @RequestMapping(value = "/generateBrandClassifier", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/generateBrandClassifier", method = RequestMethod.POST)
     public void generateBrandClassifier() {
         if (!getModelRepository().brandClassifierExists() && !getBrandClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
@@ -44,7 +44,7 @@ public class ModelGeneratorController {
         }
     }
 
-    @RequestMapping(value = "generateModel", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "generateModel", method = RequestMethod.POST)
     public void generateModel() {
         if (!getModelRepository().modelExists() && !getModelTrainigState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
