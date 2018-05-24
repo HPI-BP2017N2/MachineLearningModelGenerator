@@ -1,8 +1,7 @@
 package de.hpi.modelgenerator.services;
 
-import de.hpi.modelgenerator.persistence.ScoredModel;
-import de.hpi.modelgenerator.persistence.LabeledModel;
-import de.hpi.modelgenerator.persistence.ShopOffer;
+import de.hpi.modelgenerator.persistence.*;
+import de.hpi.modelgenerator.persistence.repo.ModelRepository;
 import de.hpi.modelgenerator.persistence.repo.OfferRepository;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.deeplearning4j.text.documentiterator.LabelledDocument;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import weka.core.Instances;
 
@@ -23,68 +23,47 @@ import static de.hpi.modelgenerator.services.MatchingModels.*;
 @Setter(AccessLevel.PRIVATE)
 public class ModelGeneratorService {
 
-    private ParagraphVectors categoryClassifier;
-
-    private ParagraphVectors brandClassifier;
-
-    private LabeledModel mlModel;
-
-    private double modelScore;
-
     private final OfferRepository offerRepository;
 
-    public ParagraphVectors getCategoryClassifier(long shopId) {
-        if(getCategoryClassifier() == null) {
-            List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
-            List<LabelledDocument> documents = new LinkedList<>();
+    private final ModelRepository modelRepository;
 
-            for(ShopOffer offer : offers) {
-                if(offer.getTitles() != null && offer.getHigherLevelCategory() != null) {
-                    documents.add(getLabelledDocumentByCategoryFromShopOffer(offer));
-                }
+
+    @Async
+    public void generateCategoryClassifier(long shopId, ClassifierTrainingState state) {
+        List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
+        List<LabelledDocument> documents = new LinkedList<>();
+
+        for(ShopOffer offer : offers) {
+            if(offer.getTitles() != null && offer.getHigherLevelCategory() != null) {
+                documents.add(getLabelledDocumentByCategoryFromShopOffer(offer));
             }
-
-            NeuralNetClassifier classifier = new NeuralNetClassifier();
-            setCategoryClassifier(classifier.getParagraphVectors(documents));
-            classifier.checkUnlabeledData();
         }
 
-        return getCategoryClassifier();
-
-
+        NeuralNetClassifier classifier = new NeuralNetClassifier();
+        getModelRepository().save(new SerializedParagraphVectors(classifier.getParagraphVectors(documents)));
+        classifier.checkUnlabeledData();
+        state.setCurrentlyLearning(false);
     }
 
-    public ParagraphVectors getBrandClassifier(long shopId) {
-        if(getBrandClassifier() == null) {
-            List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
-            List<LabelledDocument> documents = new LinkedList<>();
+    @Async
+    public void generateBrandClassifier(long shopId, ClassifierTrainingState state) {
+        List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
+        List<LabelledDocument> documents = new LinkedList<>();
 
-            for(ShopOffer offer : offers) {
-                if(offer.getTitles() != null && offer.getBrandName() != null) {
-                    documents.add(getLabelledDocumentByBrandFromShopOffer(offer));
-                }
+        for(ShopOffer offer : offers) {
+            if (offer.getTitles() != null && offer.getBrandName() != null) {
+                documents.add(getLabelledDocumentByBrandFromShopOffer(offer));
             }
-
-            NeuralNetClassifier classifier = new NeuralNetClassifier();
-            setBrandClassifier(classifier.getParagraphVectors(documents));
-            classifier.checkUnlabeledData();
         }
 
-        return  getBrandClassifier();
-
-
+        NeuralNetClassifier classifier = new NeuralNetClassifier();
+        getModelRepository().save(new SerializedParagraphVectors(classifier.getParagraphVectors(documents)));
+        classifier.checkUnlabeledData();
+        state.setCurrentlyLearning(false);
     }
 
-    public ScoredModel getModel(){
-        if(getMlModel() == null) {
-            setMlModel(getBestScoredModel());
-        }
-
-        return getMlModel().toScoredModel(getModelScore());
-
-    }
-
-    private LabeledModel getBestScoredModel(){
+    @Async
+    public void generateModel(ClassifierTrainingState state){
         List<LabeledModel> models = new ArrayList<>();
         Map<Double, LabeledModel> scoredModels = new HashMap<>();
         Instances trainingSet = createSet(10);
@@ -94,7 +73,6 @@ public class ModelGeneratorService {
         models.add(getLogistic(trainingSet));
         models.add(getRandomForest(trainingSet));
         models.add(getKNN(trainingSet));
-        //models.add(getLinearRegression(trainingSet));
         models.add(getJ48(trainingSet));
 
         for(LabeledModel model : models) {
@@ -102,8 +80,9 @@ public class ModelGeneratorService {
             scoredModels.put(score, model);
         }
 
-        setModelScore(Collections.max(scoredModels.keySet()));
-        return scoredModels.get(getModelScore());
+        Double bestModelScore = Collections.max(scoredModels.keySet());
+        getModelRepository().save(scoredModels.get(bestModelScore).toScoredModel(bestModelScore));
+        state.setCurrentlyLearning(false);
     }
 
     private LabelledDocument getLabelledDocumentByCategoryFromShopOffer(ShopOffer offer) {

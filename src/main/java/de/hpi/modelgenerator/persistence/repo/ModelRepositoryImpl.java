@@ -1,5 +1,6 @@
 package de.hpi.modelgenerator.persistence.repo;
 
+import de.hpi.modelgenerator.persistence.ScoredModel;
 import de.hpi.modelgenerator.persistence.SerializedParagraphVectors;
 import lombok.Getter;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
@@ -25,7 +26,21 @@ public class ModelRepositoryImpl implements ModelRepository {
     }
 
     @Override
-    public ParagraphVectors loadModel(String modelType) {
-        return getMongoTemplate().findById(modelType, SerializedParagraphVectors.class).getNeuralNetwork();
+    public boolean categoryClassifierExists() {
+        return classifierExists("category");
+    }
+
+    @Override
+    public boolean brandClassifierExists() {
+        return classifierExists("brand");
+    }
+
+    @Override
+    public boolean modelExists() {
+        return getMongoTemplate().exists(query(where("_id").exists(true)), ScoredModel.class);
+    }
+
+    private boolean classifierExists(String classifierType) {
+        return getMongoTemplate().exists(query(where("_id").is(classifierType)), SerializedParagraphVectors.class);
     }
 }

@@ -1,7 +1,6 @@
 package de.hpi.modelgenerator.api;
 
-import de.hpi.modelgenerator.persistence.ScoredModel;
-import de.hpi.modelgenerator.persistence.SerializedParagraphVectors;
+import de.hpi.modelgenerator.persistence.ClassifierTrainingState;
 import de.hpi.modelgenerator.persistence.repo.ModelRepository;
 import de.hpi.modelgenerator.services.ModelGeneratorService;
 import lombok.AccessLevel;
@@ -23,23 +22,33 @@ public class ModelGeneratorController {
 
     private final ModelRepository modelRepository;
 
-    @RequestMapping(value = "/getCategoryClassifier/{shopId}", method = RequestMethod.GET, produces = "application/json")
-    public SerializedParagraphVectors getCategoryClassifier(@PathVariable long shopId){
-        /*SerializedParagraphVectors serializedNetwork = new SerializedParagraphVectors(getService().getCategoryClassifier(shopId));
-        serializedNetwork.setNetworkType("category");
-        getModelRepository().save(serializedNetwork);*/
-        System.out.println(getModelRepository().loadModel("category"));
-        //return serializedNetwork;
-        return null;
+    private final ClassifierTrainingState categoryClassifierTrainingState = new ClassifierTrainingState();
+
+    private final ClassifierTrainingState brandClassifierTrainingState = new ClassifierTrainingState();
+
+    private final ClassifierTrainingState modelTrainigState = new ClassifierTrainingState();
+
+    @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.GET, produces = "application/json")
+    public void generateCategoryClassifier() {
+        if (!getModelRepository().categoryClassifierExists() && !getCategoryClassifierTrainingState().isCurrentlyLearning()) {
+            getCategoryClassifierTrainingState().setCurrentlyLearning(true);
+            getService().generateCategoryClassifier(288306L, getCategoryClassifierTrainingState());
+        }
     }
 
-    @RequestMapping(value = "/getBrandClassifier/{shopId}", method = RequestMethod.GET, produces = "application/json")
-    public SerializedParagraphVectors getBrandClassifier(@PathVariable long shopId){
-        return new SerializedParagraphVectors(getService().getBrandClassifier(shopId));
+    @RequestMapping(value = "/generateBrandClassifier", method = RequestMethod.GET, produces = "application/json")
+    public void generateBrandClassifier() {
+        if (!getModelRepository().brandClassifierExists() && !getBrandClassifierTrainingState().isCurrentlyLearning()) {
+            getCategoryClassifierTrainingState().setCurrentlyLearning(true);
+            getService().generateBrandClassifier(288306L, getBrandClassifierTrainingState());
+        }
     }
 
-    @RequestMapping(value = "getModel", method = RequestMethod.GET, produces = "application/json")
-    public ScoredModel getModel() {
-        return getService().getModel();
+    @RequestMapping(value = "generateModel", method = RequestMethod.GET, produces = "application/json")
+    public void generateModel() {
+        if (!getModelRepository().modelExists() && !getModelTrainigState().isCurrentlyLearning()) {
+            getCategoryClassifierTrainingState().setCurrentlyLearning(true);
+            getService().generateModel(getModelTrainigState());
+        }
     }
 }
