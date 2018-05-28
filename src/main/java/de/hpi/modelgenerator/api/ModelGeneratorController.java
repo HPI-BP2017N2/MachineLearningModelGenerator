@@ -27,7 +27,7 @@ public class ModelGeneratorController {
 
     private final ClassifierTrainingState brandClassifierTrainingState = new ClassifierTrainingState();
 
-    private final ClassifierTrainingState modelTrainigState = new ClassifierTrainingState();
+    private final ClassifierTrainingState modelTrainingState = new ClassifierTrainingState();
 
     @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.POST)
     public void generateCategoryClassifier() throws IOException {
@@ -47,9 +47,9 @@ public class ModelGeneratorController {
 
     @RequestMapping(value = "/generateModel", method = RequestMethod.POST)
     public void generateModel() {
-        if (!getModelRepository().modelExists() && !getModelTrainigState().isCurrentlyLearning()) {
+        if (!getModelRepository().modelExists() && !getModelTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateModel(getModelTrainigState());
+            getService().generateModel(getModelTrainingState());
         }
     }
 }

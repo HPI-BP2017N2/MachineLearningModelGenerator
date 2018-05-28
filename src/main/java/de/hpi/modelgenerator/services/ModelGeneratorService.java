@@ -31,7 +31,7 @@ public class ModelGeneratorService {
     private final ModelRepository modelRepository;
 
 
-    @Async
+    @Async("modelGeneratingThreadPoolTaskExecutor")
     public void generateCategoryClassifier(long shopId, ClassifierTrainingState state) throws IOException {
         List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
         List<LabelledDocument> documents = new LinkedList<>();
@@ -48,7 +48,7 @@ public class ModelGeneratorService {
         state.setCurrentlyLearning(false);
     }
 
-    @Async
+    @Async("modelGeneratingThreadPoolTaskExecutor")
     public void generateBrandClassifier(long shopId, ClassifierTrainingState state) throws IOException {
         List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
         List<LabelledDocument> documents = new LinkedList<>();
@@ -65,7 +65,7 @@ public class ModelGeneratorService {
         state.setCurrentlyLearning(false);
     }
 
-    @Async
+    @Async("modelGeneratingThreadPoolTaskExecutor")
     public void generateModel(ClassifierTrainingState state){
         List<LabeledModel> models = new ArrayList<>();
         Map<Double, LabeledModel> scoredModels = new HashMap<>();
