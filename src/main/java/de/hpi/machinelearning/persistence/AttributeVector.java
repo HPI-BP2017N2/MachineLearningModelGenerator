@@ -1,4 +1,4 @@
-package de.hpi.modelgenerator.persistence;
+package de.hpi.machinelearning.persistence;
 
 import weka.core.Attribute;
 
@@ -22,6 +22,7 @@ public class AttributeVector extends ArrayList<Attribute> {
         Attribute brandMatches = new Attribute("brandMatches", booleans);
         Attribute categoryMatches = new Attribute("categoryMatches", booleans);
         Attribute imageIdMatches = new Attribute("imageIdMatches", booleans);
+        Attribute skuMatches = new Attribute("skuMatches", booleans);
 
         Attribute vectorClass = new Attribute("isMatch", booleans);
 
@@ -34,6 +35,7 @@ public class AttributeVector extends ArrayList<Attribute> {
         this.add(brandMatches);
         this.add(categoryMatches);
         this.add(imageIdMatches);
+        this.add(skuMatches);
         this.add(vectorClass);
     }
 }

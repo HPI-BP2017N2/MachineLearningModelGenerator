@@ -29,7 +29,7 @@
         <shadedClassifier>bin</shadedClassifier>
 
         <nd4j.version>1.0.0-alpha</nd4j.version>
-        <dl4j.version>1.0.0-alpha</dl4j.version>
+        <dl4j.version>1.0.0-beta</dl4j.version>
         <datavec.version>1.0.0-alpha</datavec.version>
         <arbiter.version>1.0.0-alpha</arbiter.version>
         <rl4j.version>1.0.0-alpha</rl4j.version>

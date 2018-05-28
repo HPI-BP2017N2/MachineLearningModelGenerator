@@ -1,9 +1,8 @@
 package de.hpi.modelgenerator.persistence.repo;
 
-import de.hpi.modelgenerator.persistence.ScoredModel;
-import de.hpi.modelgenerator.persistence.SerializedParagraphVectors;
+import de.hpi.machinelearning.persistence.SerializedParagraphVectors;
+import de.hpi.machinelearning.persistence.persistence.ScoredModel;
 import lombok.Getter;
-import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoTemplate;

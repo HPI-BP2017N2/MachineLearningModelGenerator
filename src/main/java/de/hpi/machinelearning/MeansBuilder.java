@@ -1,4 +1,4 @@
-package de.hpi.modelgenerator.services;
+package de.hpi.machinelearning;
 
 import org.deeplearning4j.models.embeddings.inmemory.InMemoryLookupTable;
 import org.deeplearning4j.models.word2vec.VocabWord;

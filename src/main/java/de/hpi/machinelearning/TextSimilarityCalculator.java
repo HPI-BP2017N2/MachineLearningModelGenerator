@@ -1,4 +1,4 @@
-package de.hpi.modelgenerator.services;
+package de.hpi.machinelearning;
 
 import java.util.*;
 

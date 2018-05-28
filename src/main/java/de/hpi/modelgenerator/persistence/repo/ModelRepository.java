@@ -1,7 +1,7 @@
 package de.hpi.modelgenerator.persistence.repo;
 
-import de.hpi.modelgenerator.persistence.ScoredModel;
-import de.hpi.modelgenerator.persistence.SerializedParagraphVectors;
+import de.hpi.machinelearning.persistence.SerializedParagraphVectors;
+import de.hpi.machinelearning.persistence.persistence.ScoredModel;
 
 public interface ModelRepository {
 

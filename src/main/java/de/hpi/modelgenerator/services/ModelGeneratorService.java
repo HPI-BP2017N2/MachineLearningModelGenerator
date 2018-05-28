@@ -1,18 +1,21 @@
 package de.hpi.modelgenerator.services;
 
-import de.hpi.modelgenerator.persistence.*;
+import de.hpi.machinelearning.persistence.LabeledModel;
+import de.hpi.machinelearning.persistence.SerializedParagraphVectors;
+import de.hpi.modelgenerator.persistence.ClassifierTrainingState;
+import de.hpi.modelgenerator.persistence.ShopOffer;
 import de.hpi.modelgenerator.persistence.repo.ModelRepository;
 import de.hpi.modelgenerator.persistence.repo.OfferRepository;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.deeplearning4j.text.documentiterator.LabelledDocument;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import weka.core.Instances;
 
+import java.io.IOException;
 import java.util.*;
 
 import static de.hpi.modelgenerator.services.MatchingModels.*;
@@ -29,7 +32,7 @@ public class ModelGeneratorService {
 
 
     @Async
-    public void generateCategoryClassifier(long shopId, ClassifierTrainingState state) {
+    public void generateCategoryClassifier(long shopId, ClassifierTrainingState state) throws IOException {
         List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
         List<LabelledDocument> documents = new LinkedList<>();
 
@@ -40,13 +43,13 @@ public class ModelGeneratorService {
         }
 
         NeuralNetClassifier classifier = new NeuralNetClassifier();
-        getModelRepository().save(new SerializedParagraphVectors(classifier.getParagraphVectors(documents)));
+        getModelRepository().save(new SerializedParagraphVectors(classifier.getParagraphVectors(documents), "category"));
         classifier.checkUnlabeledData();
         state.setCurrentlyLearning(false);
     }
 
     @Async
-    public void generateBrandClassifier(long shopId, ClassifierTrainingState state) {
+    public void generateBrandClassifier(long shopId, ClassifierTrainingState state) throws IOException {
         List<ShopOffer> offers = getOfferRepository().getOffers(shopId);
         List<LabelledDocument> documents = new LinkedList<>();
 
@@ -57,7 +60,7 @@ public class ModelGeneratorService {
         }
 
         NeuralNetClassifier classifier = new NeuralNetClassifier();
-        getModelRepository().save(new SerializedParagraphVectors(classifier.getParagraphVectors(documents)));
+        getModelRepository().save(new SerializedParagraphVectors(classifier.getParagraphVectors(documents), "brand"));
         classifier.checkUnlabeledData();
         state.setCurrentlyLearning(false);
     }

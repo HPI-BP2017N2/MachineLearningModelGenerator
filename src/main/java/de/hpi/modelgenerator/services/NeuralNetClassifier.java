@@ -1,9 +1,13 @@
 package de.hpi.modelgenerator.services;
 
 
+
+import de.hpi.machinelearning.LabelSeeker;
+import de.hpi.machinelearning.MeansBuilder;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.models.embeddings.inmemory.InMemoryLookupTable;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.deeplearning4j.models.word2vec.VocabWord;
@@ -15,22 +19,18 @@ import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFac
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.primitives.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
+@Slf4j
 public class NeuralNetClassifier {
 
     private ParagraphVectors paragraphVectors;
     private TokenizerFactory tokenizerFactory;
     private List<LabelledDocument> unlabeledOffers;
-
-    private static final Logger log = LoggerFactory.getLogger(NeuralNetClassifier.class);
-
 
     public ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
         List<LabelledDocument> labeledOffers = new LinkedList<>();
@@ -91,6 +91,7 @@ public class NeuralNetClassifier {
             LabelledDocument document = unClassifiedIterator.nextDocument();
             INDArray documentAsCentroid = meansBuilder.documentAsVector(document);
             List<Pair<String, Double>> scores = seeker.getScores(documentAsCentroid);
+
 
             String bestLabel = getBestScoredLabel(scores);
             if(getBestScore(scores) < labelThreshold) {

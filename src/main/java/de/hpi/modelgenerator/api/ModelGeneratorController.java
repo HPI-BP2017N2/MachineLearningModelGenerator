@@ -7,10 +7,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @Slf4j
@@ -29,7 +30,7 @@ public class ModelGeneratorController {
     private final ClassifierTrainingState modelTrainigState = new ClassifierTrainingState();
 
     @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.POST)
-    public void generateCategoryClassifier() {
+    public void generateCategoryClassifier() throws IOException {
         if (!getModelRepository().categoryClassifierExists() && !getCategoryClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
             getService().generateCategoryClassifier(288306L, getCategoryClassifierTrainingState());
@@ -37,14 +38,14 @@ public class ModelGeneratorController {
     }
 
     @RequestMapping(value = "/generateBrandClassifier", method = RequestMethod.POST)
-    public void generateBrandClassifier() {
+    public void generateBrandClassifier() throws IOException {
         if (!getModelRepository().brandClassifierExists() && !getBrandClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
             getService().generateBrandClassifier(288306L, getBrandClassifierTrainingState());
         }
     }
 
-    @RequestMapping(value = "generateModel", method = RequestMethod.POST)
+    @RequestMapping(value = "/generateModel", method = RequestMethod.POST)
     public void generateModel() {
         if (!getModelRepository().modelExists() && !getModelTrainigState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);

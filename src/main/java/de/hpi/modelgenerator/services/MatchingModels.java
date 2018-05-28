@@ -1,6 +1,11 @@
 package de.hpi.modelgenerator.services;
 
-import de.hpi.modelgenerator.persistence.*;
+
+import de.hpi.machinelearning.persistence.AttributeVector;
+import de.hpi.machinelearning.persistence.FeatureInstance;
+import de.hpi.machinelearning.persistence.LabeledModel;
+import de.hpi.modelgenerator.persistence.ParsedOffer;
+import de.hpi.modelgenerator.persistence.ShopOffer;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -161,6 +166,8 @@ public class MatchingModels {
         parsedOffer.setUrl("http://example.com/123");
         shopOffer.setImageId("qwertz");
         parsedOffer.setImageUrl( "qwerty");
+        parsedOffer.setSku("abc");
+        shopOffer.setSku("abc");
 
         for (int i = 0; i < count; i++) {
             Instance iExample = new FeatureInstance(shopOffer, parsedOffer, true);

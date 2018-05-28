@@ -1,5 +1,7 @@
-package de.hpi.modelgenerator.persistence;
+package de.hpi.machinelearning.persistence;
 
+import de.hpi.modelgenerator.persistence.ParsedOffer;
+import de.hpi.modelgenerator.persistence.ShopOffer;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
@@ -8,13 +10,13 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Map;
 
-import static de.hpi.modelgenerator.services.TextSimilarityCalculator.cosineSimilarity;
-import static de.hpi.modelgenerator.services.TextSimilarityCalculator.jaccardSimilarity;
+import static de.hpi.machinelearning.TextSimilarityCalculator.cosineSimilarity;
+import static de.hpi.machinelearning.TextSimilarityCalculator.jaccardSimilarity;
 
 public class FeatureInstance extends DenseInstance {
 
     public FeatureInstance(@NotNull ShopOffer shopOffer, @NotNull ParsedOffer parsedOffer, @NotNull Boolean isMatch) {
-        super(10);
+        super(11);
         final ArrayList<Attribute> features = new AttributeVector();
         Instances dataSet = new Instances("Rel", features, 1);
         this.setDataset(dataSet);
@@ -27,7 +29,8 @@ public class FeatureInstance extends DenseInstance {
         this.setValue(features.get(6), getEquation(shopOffer.getBrandName(), parsedOffer.getBrandName()));
         this.setValue(features.get(7), getEquation(shopOffer.getMappedCatalogCategory(), parsedOffer.getCategory()));
         this.setValue(features.get(8), compareImageIds(shopOffer.getImageId(), parsedOffer.getImageUrl()));
-        this.setValue(features.get(9), String.valueOf(isMatch));
+        this.setValue(features.get(9), getEquation(shopOffer.getSku(), parsedOffer.getSku()));
+        this.setValue(features.get(10), String.valueOf(isMatch));
     }
 
     private <T> T getMapValue(Map<String, T> map) {
