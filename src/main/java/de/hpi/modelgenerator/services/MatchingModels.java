@@ -35,6 +35,13 @@ import java.util.Map;
 public class MatchingModels {
 
     private static final Logger log = LoggerFactory.getLogger(MatchingModels.class);
+    public static final String NAIVE_BAYES = "naiveBayes";
+    public static final String LOGISTIC = "logistic";
+    public static final String RANDOM_FOREST = "randomForest";
+    public static final String K_NN = "kNN";
+    public static final String LINEAR_REGRESSION = "linearRegression";
+    public static final String J48 = "j48";
+    public static final String ADA_BOOST = "adaBoost";
 
     public static LabeledModel getNaiveBayes(Instances trainingSet) {
         Classifier cModel = new NaiveBayes();
@@ -44,7 +51,7 @@ public class MatchingModels {
             e.printStackTrace();
         }
 
-        return new LabeledModel(cModel, "naiveBayes");
+        return new LabeledModel(cModel, NAIVE_BAYES);
     }
 
     public static LabeledModel getLogistic(Instances trainingSet) {
@@ -55,7 +62,7 @@ public class MatchingModels {
             e.printStackTrace();
         }
 
-        return new LabeledModel(cModel, "logistic");
+        return new LabeledModel(cModel, LOGISTIC);
     }
 
     public static LabeledModel getRandomForest(Instances trainingSet) {
@@ -66,7 +73,7 @@ public class MatchingModels {
             e.printStackTrace();
         }
 
-        return new LabeledModel(cModel, "randomForest");
+        return new LabeledModel(cModel, RANDOM_FOREST);
     }
 
     public static LabeledModel getKNN(Instances trainingSet) {
@@ -77,7 +84,7 @@ public class MatchingModels {
             e.printStackTrace();
         }
 
-        return new LabeledModel(cModel, "kNN");
+        return new LabeledModel(cModel, K_NN);
     }
 
     public static LabeledModel getLinearRegression(Instances trainingSet) {
@@ -88,7 +95,7 @@ public class MatchingModels {
             e.printStackTrace();
         }
 
-        return new LabeledModel(cModel, "linearRegression");
+        return new LabeledModel(cModel, LINEAR_REGRESSION);
     }
 
     public static LabeledModel getJ48(Instances trainingSet) {
@@ -99,7 +106,7 @@ public class MatchingModels {
             e.printStackTrace();
         }
 
-        return new LabeledModel(cModel, "j48");
+        return new LabeledModel(cModel, J48);
     }
 
     public static LabeledModel getAdaBoost(Instances trainingSet) {
@@ -110,10 +117,10 @@ public class MatchingModels {
             e.printStackTrace();
         }
 
-        return new LabeledModel(cModel, "adaBoost");
+        return new LabeledModel(cModel, ADA_BOOST);
     }
 
-    public static double evaluateModel(Classifier cModel, Instances trainingSet) {
+    public static double getClassificationError(Classifier cModel, Instances trainingSet) {
         Evaluation eTest;
         Instances isTestingSet = createSet(100);
         try {
@@ -130,6 +137,8 @@ public class MatchingModels {
                 }
                 System.out.printf("\n");
             }
+
+            return eTest.errorRate();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -170,6 +179,7 @@ public class MatchingModels {
         shopOffer.setSku("abc");
 
         for (int i = 0; i < count; i++) {
+
             Instance iExample = new FeatureInstance(shopOffer, parsedOffer, true);
             isSet.add(iExample);
         }

@@ -7,6 +7,10 @@ import java.util.ArrayList;
 
 public class AttributeVector extends ArrayList<Attribute> {
 
+    public final static String TRUE = "true";
+    public final static String FALSE = "false";
+    public final static String NULL = "notSet";
+
     public AttributeVector() {
         Attribute jaccardTitle = new Attribute("jaccardSimilarityTitle");
         Attribute jaccardDescription = new Attribute("jaccardSimilarityDescription");
@@ -15,14 +19,16 @@ public class AttributeVector extends ArrayList<Attribute> {
         Attribute priceDeviance = new Attribute("priceDeviance");
 
         ArrayList<String> booleans = new ArrayList<>();
-        booleans.add("true");
-        booleans.add("false");
+        booleans.add(TRUE);
+        booleans.add(FALSE);
+        booleans.add(NULL);
 
         Attribute urlMatches = new Attribute("urlMatches", booleans);
         Attribute brandMatches = new Attribute("brandMatches", booleans);
         Attribute categoryMatches = new Attribute("categoryMatches", booleans);
         Attribute imageIdMatches = new Attribute("imageIdMatches", booleans);
         Attribute skuMatches = new Attribute("skuMatches", booleans);
+        Attribute hanMatches = new Attribute("hanMatches", booleans);
 
         Attribute vectorClass = new Attribute("isMatch", booleans);
 
@@ -35,6 +41,7 @@ public class AttributeVector extends ArrayList<Attribute> {
         this.add(brandMatches);
         this.add(categoryMatches);
         this.add(imageIdMatches);
+        this.add(hanMatches);
         this.add(skuMatches);
         this.add(vectorClass);
     }

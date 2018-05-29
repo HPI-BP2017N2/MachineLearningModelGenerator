@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.models.embeddings.inmemory.InMemoryLookupTable;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.deeplearning4j.models.word2vec.VocabWord;
-import org.deeplearning4j.text.documentiterator.LabelAwareIterator;
 import org.deeplearning4j.text.documentiterator.LabelledDocument;
 import org.deeplearning4j.text.documentiterator.SimpleLabelAwareIterator;
 import org.deeplearning4j.text.tokenization.tokenizer.preprocessor.CommonPreprocessor;
@@ -20,66 +19,47 @@ import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.primitives.Pair;
 
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
 @Slf4j
 public class NeuralNetClassifier {
 
-    private ParagraphVectors paragraphVectors;
-    private TokenizerFactory tokenizerFactory;
-    private List<LabelledDocument> unlabeledOffers;
+    public static ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
 
-    public ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
-        List<LabelledDocument> labeledOffers = new LinkedList<>();
-        setUnlabeledOffers(new LinkedList<>());
-        List<Integer> randoms = getRandomIntegers(documents.size(),  (int)(0.9 * documents.size()));
-        int offerIndex = 0;
-
-        log.info("Given a data set with " +  documents.size() + " documents.");
-
-        for(LabelledDocument document: documents) {
-            if (randoms.contains(offerIndex)) {
-                labeledOffers.add(document);
-            } else {
-                getUnlabeledOffers().add(document);
-            }
-            offerIndex++;
-        }
-
-        log.info("Use " + labeledOffers.size() + " documents for training.");
-        log.info("Use " + getUnlabeledOffers().size() + " documents for validation.");
-
-        setTokenizerFactory(new DefaultTokenizerFactory());
-        getTokenizerFactory().setTokenPreProcessor(new CommonPreprocessor());
+        TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
+        tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
 
         // ParagraphVectors training configuration
-        setParagraphVectors(new ParagraphVectors.Builder()
+         ParagraphVectors paragraphVectors = (new ParagraphVectors.Builder()
                 .learningRate(0.025)
                 .minLearningRate(0.001)
                 .batchSize(1000)
                 .epochs(20)
-                .iterate(new SimpleLabelAwareIterator(labeledOffers))
+                .iterate(new SimpleLabelAwareIterator(documents))
                 .trainWordVectors(true)
-                .tokenizerFactory(getTokenizerFactory())
+                .tokenizerFactory(tokenizerFactory)
                 .build());
 
         // Start model training
-        getParagraphVectors().fit();
+        paragraphVectors.fit();
         log.info("DONE BUILDING MODEL");
-
-        return getParagraphVectors();
+        return paragraphVectors;
     }
 
-    public void checkUnlabeledData() {
-        LabelAwareIterator unClassifiedIterator = new SimpleLabelAwareIterator(getUnlabeledOffers());
+    public static void checkUnlabeledData(ParagraphVectors paragraphVectors,  List<LabelledDocument> testingSet) {
+        TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
+        tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
+
         MeansBuilder meansBuilder = new MeansBuilder(
-                (InMemoryLookupTable<VocabWord>)getParagraphVectors().getLookupTable(),
-                getTokenizerFactory());
-        LabelSeeker seeker = new LabelSeeker(getParagraphVectors().getLabelsSource().getLabels(),
-                (InMemoryLookupTable<VocabWord>) getParagraphVectors().getLookupTable());
+                (InMemoryLookupTable<VocabWord>)paragraphVectors.getLookupTable(),
+                tokenizerFactory);
+        LabelSeeker seeker = new LabelSeeker(paragraphVectors.getLabelsSource().getLabels(),
+                (InMemoryLookupTable<VocabWord>) paragraphVectors.getLookupTable());
         int rightMatches = 0;
         int wrongMatches = 0;
         int notLabeled = 0;
@@ -87,16 +67,15 @@ public class NeuralNetClassifier {
 
         Set<String> labels = new HashSet<>();
 
-        while (unClassifiedIterator.hasNextDocument()) {
-            LabelledDocument document = unClassifiedIterator.nextDocument();
+        for(LabelledDocument document : testingSet) {
             INDArray documentAsCentroid = meansBuilder.documentAsVector(document);
             List<Pair<String, Double>> scores = seeker.getScores(documentAsCentroid);
 
 
-            String bestLabel = getBestScoredLabel(scores);
-            if(getBestScore(scores) < labelThreshold) {
+            Pair<String, Double> bestLabel = getBestScoredLabel(scores);
+            if(bestLabel.getRight() < labelThreshold) {
                 notLabeled++;
-            } else if(bestLabel.equals(document.getLabels().get(0))){
+            } else if(bestLabel.getLeft().equals(document.getLabels().get(0))){
                 rightMatches++;
             } else {
                 wrongMatches++;
@@ -112,45 +91,17 @@ public class NeuralNetClassifier {
 
     }
 
-    private String getBestScoredLabel(List<Pair<String, Double>> scores) {
-        String bestLabel = null;
+    private static Pair<String, Double> getBestScoredLabel(List<Pair<String, Double>> scores) {
         Double bestScore = Double.MIN_VALUE;
+        Pair<String, Double> bestPair = null;
 
         for(Pair<String, Double> score : scores) {
             if(score.getSecond() > bestScore) {
                 bestScore = score.getSecond();
-                bestLabel = score.getFirst();
+                bestPair = score;
             }
         }
 
-        return bestLabel;
+        return bestPair;
     }
-
-    private Double getBestScore(List<Pair<String, Double>> scores) {
-        Double bestScore = Double.MIN_VALUE;
-
-        for(Pair<String, Double> score : scores) {
-            if(score.getSecond() > bestScore) {
-                bestScore = score.getSecond();
-            }
-        }
-
-        return bestScore;
-    }
-
-    private List<Integer> getRandomIntegers(int range, int numberOfRandoms) {
-        List<Integer> randoms = new ArrayList<>();
-        for(int i = 0; i < numberOfRandoms; i++) {
-            boolean numberAlreadyTaken = true;
-            int random = 0;
-            while(numberAlreadyTaken) {
-                random = ThreadLocalRandom.current().nextInt(0, range + 1);
-                numberAlreadyTaken = randoms.contains(random);
-            }
-            randoms.add(random);
-        }
-
-        return randoms;
-    }
-
 }

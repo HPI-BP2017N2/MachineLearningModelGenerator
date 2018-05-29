@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 @Getter
 @Setter
@@ -11,10 +12,11 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MatchingResult {
 
+    @Indexed private String offerKey;
     private long shopId;
     private String matchingReason;
     private int confidence;
-    private String offerKey;
+    private String idealoBrand;
     private String idealoCategory;
     private String idealoCategoryName;
     private String higherLevelIdealoCategory;

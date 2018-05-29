@@ -1,6 +1,11 @@
 server:
  port: ${MLMG_PORT}
 
+modelgenerator:
+ matchesPerShop: 1000
+ maximumMatchesForLearning: 500000
+ testSetPercentage: 0.9
+
 models:
  mongodb:
   host: ${MONGO_IP}
