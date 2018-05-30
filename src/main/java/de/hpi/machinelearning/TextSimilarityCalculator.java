@@ -5,25 +5,20 @@ import java.util.*;
 public class TextSimilarityCalculator {
 
     public static double jaccardSimilarity(String left, String right) {
-        if (left == null || right == null) {
-            return 0d;
+        if (stringsAreEmpty(left, right)) {
+            return -1d;
         }
 
         Set<String> leftWords = new HashSet<>(getNGramm(left, 3));
         Set<String> rightWords = new HashSet<>(getNGramm(right, 3));
-
-        if (leftWords.size() == 0 || rightWords.size() == 0) {
-            return 0d;
-        }
-
         final Set<String> intersectionSet = getIntersection(leftWords, rightWords);
         final Set<String> unionSet = getUnion(leftWords, rightWords);
         return (double)intersectionSet.size() / (double)unionSet.size();
     }
 
     public static double cosineSimilarity(String left, String right) {
-        if (left == null || right == null) {
-            return 0d;
+        if (stringsAreEmpty(left, right)) {
+            return -1d;
         }
 
         Map<String, Integer> leftVector = getWordOccurenceVector(getNGramm(left, 3));
@@ -90,6 +85,16 @@ public class TextSimilarityCalculator {
             result.add(normalisedInput.substring(i, i + tokenLength));
         }
         return result;
+    }
+
+    private static boolean stringsAreEmpty(String a, String b) {
+        return a == null || b == null || stringIsEmpty(a) || stringIsEmpty(b);
+
+    }
+
+    private static boolean stringIsEmpty(String string) {
+        String stringWithoutWhites = string.replaceAll("\\w", "");
+        return stringWithoutWhites.isEmpty();
     }
 
 }
