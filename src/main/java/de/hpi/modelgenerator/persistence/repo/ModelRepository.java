@@ -1,14 +1,30 @@
 package de.hpi.modelgenerator.persistence.repo;
 
+import de.hpi.machinelearning.persistence.ScoredModel;
 import de.hpi.machinelearning.persistence.SerializedParagraphVectors;
-import de.hpi.machinelearning.persistence.persistence.ScoredModel;
+import lombok.Getter;
+import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Repository;
 
-public interface ModelRepository {
+import java.io.IOException;
 
-    void save(SerializedParagraphVectors model);
-    void save(ScoredModel model);
-    boolean categoryClassifierExists();
-    boolean brandClassifierExists();
-    boolean modelExists();
+@Repository
+@Getter
+public class ModelRepository {
+
+    @Autowired
+    @Qualifier(value = "modelTemplate")
+    private MongoTemplate mongoTemplate;
+
+    public void save(ParagraphVectors model, String type) throws IOException {
+        getMongoTemplate().save(new SerializedParagraphVectors(model, type));
+    }
+
+    public void save(ScoredModel model) {
+        getMongoTemplate().save(model);
+    }
 
 }

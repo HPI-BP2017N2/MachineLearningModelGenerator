@@ -1,16 +1,11 @@
 package de.hpi.modelgenerator.services;
 
 
-import de.hpi.machinelearning.persistence.AttributeVector;
-import de.hpi.machinelearning.persistence.FeatureInstance;
 import de.hpi.machinelearning.persistence.LabeledModel;
-import de.hpi.modelgenerator.persistence.ParsedOffer;
-import de.hpi.modelgenerator.persistence.ShopOffer;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -21,29 +16,23 @@ import weka.classifiers.lazy.IBk;
 import weka.classifiers.meta.AdaBoostM1;
 import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
-import weka.core.Attribute;
-import weka.core.Instance;
 import weka.core.Instances;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
+@Slf4j
 public class MatchingModels {
 
-    private static final Logger log = LoggerFactory.getLogger(MatchingModels.class);
-    public static final String NAIVE_BAYES = "naiveBayes";
-    public static final String LOGISTIC = "logistic";
-    public static final String RANDOM_FOREST = "randomForest";
-    public static final String K_NN = "kNN";
-    public static final String LINEAR_REGRESSION = "linearRegression";
-    public static final String J48 = "j48";
-    public static final String ADA_BOOST = "adaBoost";
+    private static final String NAIVE_BAYES = "naiveBayes";
+    private static final String LOGISTIC = "logistic";
+    private static final String RANDOM_FOREST = "randomForest";
+    private static final String K_NN = "kNN";
+    private static final String LINEAR_REGRESSION = "linearRegression";
+    private static final String J48 = "j48";
+    private static final String ADA_BOOST = "adaBoost";
 
-    public static LabeledModel getNaiveBayes(Instances trainingSet) {
+    public LabeledModel getNaiveBayes(Instances trainingSet) {
         Classifier cModel = new NaiveBayes();
         try {
             cModel.buildClassifier(trainingSet);
@@ -54,7 +43,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, NAIVE_BAYES);
     }
 
-    public static LabeledModel getLogistic(Instances trainingSet) {
+    public LabeledModel getLogistic(Instances trainingSet) {
         Classifier cModel = new Logistic();
         try {
             cModel.buildClassifier(trainingSet);
@@ -65,7 +54,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, LOGISTIC);
     }
 
-    public static LabeledModel getRandomForest(Instances trainingSet) {
+    public LabeledModel getRandomForest(Instances trainingSet) {
         Classifier cModel = new RandomForest();
         try {
             cModel.buildClassifier(trainingSet);
@@ -76,7 +65,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, RANDOM_FOREST);
     }
 
-    public static LabeledModel getKNN(Instances trainingSet) {
+    public LabeledModel getKNN(Instances trainingSet) {
         Classifier cModel = new IBk();
         try {
             cModel.buildClassifier(trainingSet);
@@ -87,7 +76,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, K_NN);
     }
 
-    public static LabeledModel getLinearRegression(Instances trainingSet) {
+    public LabeledModel getLinearRegression(Instances trainingSet) {
         Classifier cModel = new LinearRegression();
         try {
             cModel.buildClassifier(trainingSet);
@@ -98,7 +87,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, LINEAR_REGRESSION);
     }
 
-    public static LabeledModel getJ48(Instances trainingSet) {
+    public LabeledModel getJ48(Instances trainingSet) {
         Classifier cModel = new J48();
         try {
             cModel.buildClassifier(trainingSet);
@@ -109,7 +98,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, J48);
     }
 
-    public static LabeledModel getAdaBoost(Instances trainingSet) {
+    public LabeledModel getAdaBoost(Instances trainingSet) {
         Classifier cModel = new AdaBoostM1();
         try {
             cModel.buildClassifier(trainingSet);
@@ -120,24 +109,11 @@ public class MatchingModels {
         return new LabeledModel(cModel, ADA_BOOST);
     }
 
-    public static double getClassificationError(Classifier cModel, Instances trainingSet) {
-        Evaluation eTest;
-        Instances isTestingSet = createSet(100);
+    public double getClassificationError(Classifier cModel, Instances trainingSet) {
+        System.out.println("score!!!!!!!!!!!!!!");
         try {
-            eTest = new Evaluation(trainingSet);
-            eTest.evaluateModel(cModel, isTestingSet);
-            String strSummary = eTest.toSummaryString();
-            System.out.println(strSummary);
-
-            System.out.println("\nConfusion Matrix: ");
-
-            for(double[] array : eTest.confusionMatrix()) {
-                for(double i : array) {
-                    System.out.printf(String.format("%1$" + 4 + "s", i) + "\t");
-                }
-                System.out.printf("\n");
-            }
-
+            Evaluation eTest = new Evaluation(trainingSet);
+            eTest.evaluateModel(cModel, trainingSet);
             return eTest.errorRate();
 
         } catch (Exception e) {
@@ -145,46 +121,5 @@ public class MatchingModels {
         }
 
         return 1d;
-    }
-
-
-    public static Instances createSet(int count) {
-        ArrayList<Attribute> features = new AttributeVector();
-        Instances isSet = new Instances("Rel", features, count);
-
-        ShopOffer shopOffer = new ShopOffer();
-        ParsedOffer parsedOffer = new ParsedOffer();
-        Map<String, String> title = new HashMap<>();
-        title.put("0", "iPhone7");
-        shopOffer.setTitles(title);
-        parsedOffer.setTitle("iPhone7");
-        shopOffer.setDescriptions(title);
-        parsedOffer.setTitle("iPhone7");
-        parsedOffer.setBrandName("Apple");
-        shopOffer.setBrandName("Apple");
-        parsedOffer.setPrice("1000");
-        Map<String, Double> price = new HashMap<>();
-        price.put("0", 1000d);
-        shopOffer.setPrices(price);
-        parsedOffer.setPrice("1000");
-        shopOffer.setMappedCatalogCategory("12345");
-        parsedOffer.setCategory("12345");
-        Map<String, String> url = new HashMap<>();
-        url.put("0", "http://example.com/123");
-        shopOffer.setUrls(url);
-        parsedOffer.setUrl("http://example.com/123");
-        shopOffer.setImageId("qwertz");
-        parsedOffer.setImageUrl( "qwerty");
-        parsedOffer.setSku("abc");
-        shopOffer.setSku("abc");
-
-        for (int i = 0; i < count; i++) {
-
-            Instance iExample = new FeatureInstance(shopOffer, parsedOffer, true);
-            isSet.add(iExample);
-        }
-
-        isSet.setClassIndex(features.size() - 1);
-        return isSet;
     }
 }

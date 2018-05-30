@@ -1,7 +1,6 @@
 package de.hpi.machinelearning.persistence;
 
 
-import de.hpi.machinelearning.persistence.persistence.ScoredModel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -29,6 +28,6 @@ public class LabeledModel {
         }
 
          byte[] model = ((ByteArrayOutputStream) out).toByteArray();
-        return new de.hpi.machinelearning.persistence.persistence.ScoredModel(model, getModelType(), score);
+        return new ScoredModel(model, getModelType(), score);
     }
 }

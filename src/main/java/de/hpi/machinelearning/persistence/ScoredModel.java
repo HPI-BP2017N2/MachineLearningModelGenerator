@@ -1,4 +1,4 @@
-package de.hpi.machinelearning.persistence.persistence;
+package de.hpi.machinelearning.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;

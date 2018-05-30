@@ -22,7 +22,6 @@ import java.net.URI;
 public class Cache {
 
     private final RestTemplate restTemplate;
-
     private final CacheProperties properties;
 
     @Autowired
@@ -48,7 +47,5 @@ public class Cache {
                 .encode()
                 .toUri();
     }
-
-
 
 }

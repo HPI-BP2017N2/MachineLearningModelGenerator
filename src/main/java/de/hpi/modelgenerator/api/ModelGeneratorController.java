@@ -20,36 +20,41 @@ import java.io.IOException;
 public class ModelGeneratorController {
 
     private final ModelGeneratorService service;
-
     private final ModelRepository modelRepository;
-
     private final ClassifierTrainingState categoryClassifierTrainingState = new ClassifierTrainingState();
-
     private final ClassifierTrainingState brandClassifierTrainingState = new ClassifierTrainingState();
-
     private final ClassifierTrainingState modelTrainingState = new ClassifierTrainingState();
 
     @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.POST)
     public void generateCategoryClassifier() throws IOException {
-        if (!getModelRepository().categoryClassifierExists() && !getCategoryClassifierTrainingState().isCurrentlyLearning()) {
+        if (!getCategoryClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateCategoryClassifier(288306L, getCategoryClassifierTrainingState());
+            getService().generateCategoryClassifier(getCategoryClassifierTrainingState());
         }
     }
 
     @RequestMapping(value = "/generateBrandClassifier", method = RequestMethod.POST)
     public void generateBrandClassifier() throws IOException {
-        if (!getModelRepository().brandClassifierExists() && !getBrandClassifierTrainingState().isCurrentlyLearning()) {
+        if (!getBrandClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateBrandClassifier(288306L, getBrandClassifierTrainingState());
+            getService().generateBrandClassifier(getBrandClassifierTrainingState());
         }
     }
 
     @RequestMapping(value = "/generateModel", method = RequestMethod.POST)
     public void generateModel() {
-        if (!getModelRepository().modelExists() && !getModelTrainingState().isCurrentlyLearning()) {
+        if (!getModelTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
             getService().generateModel(getModelTrainingState());
         }
+    }
+
+    @RequestMapping(value = "/generateAllClassifiers", method = RequestMethod.POST)
+    public void generateAllClassifiers() throws IOException {
+        getService().setTrainingAndTestingSet();
+        generateCategoryClassifier();
+        generateBrandClassifier();
+        generateModel();
+        getService().freeTestingSet();
     }
 }

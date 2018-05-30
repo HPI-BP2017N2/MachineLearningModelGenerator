@@ -18,23 +18,23 @@ import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFac
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.primitives.Pair;
+import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
 @Slf4j
+@Service
 public class NeuralNetClassifier {
 
-    public static ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
+    public ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
 
         TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
         tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
 
-        // ParagraphVectors training configuration
          ParagraphVectors paragraphVectors = (new ParagraphVectors.Builder()
                 .learningRate(0.025)
                 .minLearningRate(0.001)
@@ -45,13 +45,11 @@ public class NeuralNetClassifier {
                 .tokenizerFactory(tokenizerFactory)
                 .build());
 
-        // Start model training
         paragraphVectors.fit();
-        log.info("DONE BUILDING MODEL");
         return paragraphVectors;
     }
 
-    public static void checkUnlabeledData(ParagraphVectors paragraphVectors,  List<LabelledDocument> testingSet) {
+    public void checkUnlabeledData(ParagraphVectors paragraphVectors,  List<LabelledDocument> testingSet) {
         TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
         tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
 
@@ -84,10 +82,10 @@ public class NeuralNetClassifier {
             labels.add(document.getLabels().get(0));
         }
 
-        log.info("Right labels: " + rightMatches);
-        log.info("Wrong labels: " + wrongMatches);
-        log.info("Not labeled: " + notLabeled);
-        log.info("Different labels: " + labels.size());
+
+        log.info("Classification Error: {}", (double) wrongMatches / (double) (wrongMatches + rightMatches));
+        log.info("Not labeled: {}", notLabeled);
+        log.info("Different labels: {}", labels.size());
 
     }
 
