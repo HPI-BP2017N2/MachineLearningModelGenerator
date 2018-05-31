@@ -108,9 +108,7 @@ public class ModelGeneratorServiceTest {
 
         verify(getMatchingResultRepository()).getShopIds();
         verify(getMatchingResultRepository(), times(1)).getMatches(anyLong(), anyInt());
-        verify(getState()).isCurrentlyLearning();
-        verify(getState()).setCurrentlyLearning(true);
-        getState().setCurrentlyLearning(false);
+
     }
 
     @Test
@@ -124,7 +122,7 @@ public class ModelGeneratorServiceTest {
         verify(getModelRepository()).save(any(ParagraphVectors.class), eq(CATEGORY));
         verify(getState()).isCurrentlyLearning();
         verify(getState()).setCurrentlyLearning(true);
-        getState().setCurrentlyLearning(false);
+        verify(getState()).setCurrentlyLearning(false);
     }
 
     @Test
@@ -138,7 +136,7 @@ public class ModelGeneratorServiceTest {
         verify(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
         verify(getState()).isCurrentlyLearning();
         verify(getState()).setCurrentlyLearning(true);
-        getState().setCurrentlyLearning(false);
+        verify(getState()).setCurrentlyLearning(false);
     }
 
     @Test
@@ -167,7 +165,7 @@ public class ModelGeneratorServiceTest {
         verify(getModelRepository()).save(any(ScoredModel.class));
         verify(getState()).isCurrentlyLearning();
         verify(getState()).setCurrentlyLearning(true);
-        getState().setCurrentlyLearning(false);
+        verify(getState()).setCurrentlyLearning(false);
     }
 
     @Test(expected = IllegalStateException.class)
