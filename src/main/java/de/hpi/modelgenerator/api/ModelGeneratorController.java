@@ -1,7 +1,6 @@
 package de.hpi.modelgenerator.api;
 
 import de.hpi.modelgenerator.persistence.ClassifierTrainingState;
-import de.hpi.modelgenerator.persistence.repo.ModelRepository;
 import de.hpi.modelgenerator.services.ModelGeneratorService;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -26,29 +25,19 @@ public class ModelGeneratorController {
 
     @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.POST)
     public void generateCategoryClassifier() throws IOException {
-        if (!getCategoryClassifierTrainingState().isCurrentlyLearning()) {
-            getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateCategoryClassifier();
-            getCategoryClassifierTrainingState().setCurrentlyLearning(false);
-        }
+        getService().generateCategoryClassifier(getCategoryClassifierTrainingState());
+
     }
 
     @RequestMapping(value = "/generateBrandClassifier", method = RequestMethod.POST)
     public void generateBrandClassifier() throws IOException {
-        if (!getBrandClassifierTrainingState().isCurrentlyLearning()) {
-            getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateBrandClassifier();
-            getBrandClassifierTrainingState().setCurrentlyLearning(false);
-        }
+        getService().generateBrandClassifier(getBrandClassifierTrainingState());
+
     }
 
     @RequestMapping(value = "/generateModel", method = RequestMethod.POST)
     public void generateModel() throws IOException {
-        if (!getModelTrainingState().isCurrentlyLearning()) {
-            getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateModel();
-            getModelTrainingState().setCurrentlyLearning(false);
-        }
+        getService().generateModel(getModelTrainingState());
     }
 
     @RequestMapping(value = "/generateAllClassifiers", method = RequestMethod.POST)

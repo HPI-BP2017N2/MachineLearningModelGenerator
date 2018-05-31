@@ -63,6 +63,7 @@ public class ModelGeneratorServiceTest {
     @Mock private NeuralNetClassifier neuralNetClassifier;
     @Mock private ParagraphVectors paragraphVectors;
     @Mock private Classifier classifier;
+    @Mock private ClassifierTrainingState state;
 
     private ModelGeneratorService service;
 
@@ -107,6 +108,9 @@ public class ModelGeneratorServiceTest {
 
         verify(getMatchingResultRepository()).getShopIds();
         verify(getMatchingResultRepository(), times(1)).getMatches(anyLong(), anyInt());
+        verify(getState()).isCurrentlyLearning();
+        verify(getState()).setCurrentlyLearning(true);
+        getState().setCurrentlyLearning(false);
     }
 
     @Test
@@ -114,10 +118,13 @@ public class ModelGeneratorServiceTest {
         doReturn(getParagraphVectors()).when(getNeuralNetClassifier()).getParagraphVectors(anyList());
         doNothing().when(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
 
-        getService().generateCategoryClassifier();
+        getService().generateCategoryClassifier(getState());
 
         verify(getNeuralNetClassifier()).getParagraphVectors(anyList());
         verify(getModelRepository()).save(any(ParagraphVectors.class), eq(CATEGORY));
+        verify(getState()).isCurrentlyLearning();
+        verify(getState()).setCurrentlyLearning(true);
+        getState().setCurrentlyLearning(false);
     }
 
     @Test
@@ -125,10 +132,13 @@ public class ModelGeneratorServiceTest {
         doReturn(getParagraphVectors()).when(getNeuralNetClassifier()).getParagraphVectors(anyList());
         doNothing().when(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
 
-        getService().generateBrandClassifier();
+        getService().generateBrandClassifier(getState());
 
         verify(getNeuralNetClassifier()).getParagraphVectors(anyList());
         verify(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
+        verify(getState()).isCurrentlyLearning();
+        verify(getState()).setCurrentlyLearning(true);
+        getState().setCurrentlyLearning(false);
     }
 
     @Test
@@ -147,7 +157,7 @@ public class ModelGeneratorServiceTest {
         doReturn(null).when(getCache()).getOffer(anyLong(), anyString());
         doReturn(1d).when(getMatchingModels()).getClassificationError(any(Classifier.class), any(Instances.class));
 
-        getService().generateModel();
+        getService().generateModel(getState());
         verify(getMatchingModels()).getAdaBoost(any(Instances.class));
         verify(getMatchingModels()).getJ48(any(Instances.class));
         verify(getMatchingModels()).getKNN(any(Instances.class));
@@ -155,13 +165,16 @@ public class ModelGeneratorServiceTest {
         verify(getMatchingModels()).getRandomForest(any(Instances.class));
         verify(getMatchingModels()).getLogistic(any(Instances.class));
         verify(getModelRepository()).save(any(ScoredModel.class));
+        verify(getState()).isCurrentlyLearning();
+        verify(getState()).setCurrentlyLearning(true);
+        getState().setCurrentlyLearning(false);
     }
 
     @Test(expected = IllegalStateException.class)
     public void doNotGenerateModelWhenNoBrandClassifier() throws IOException {
         doReturn(false).when(getModelRepository()).brandClassifierExists();
 
-        getService().generateModel();
+        getService().generateModel(getState());
 
     }
 }

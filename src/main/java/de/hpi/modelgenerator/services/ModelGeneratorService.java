@@ -51,7 +51,12 @@ public class ModelGeneratorService {
     private List<MatchingResult> trainingSet;
     private List<MatchingResult> testingSet;
 
-    public void generateCategoryClassifier() throws IOException {
+    public void generateCategoryClassifier(ClassifierTrainingState state) throws IOException {
+        if(state.isCurrentlyLearning()) {
+            return;
+        }
+
+        state.setCurrentlyLearning(true);
         setTrainingAndTestingSet();
         List<LabelledDocument> trainingSet = getLabelledDocumentsByCategory(getTrainingSet());
         List<LabelledDocument> testingSet = getLabelledDocumentsByCategory(getTestingSet());
@@ -61,12 +66,18 @@ public class ModelGeneratorService {
         log.info("Use {} documents for validation.", testingSet.size());
 
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
+        state.setCurrentlyLearning(false);
         getModelRepository().save(paragraphVectors, CATEGORY);
         getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet);
         log.info("Successfully generated category classifier.");
     }
 
-    public void generateBrandClassifier() throws IOException {
+    public void generateBrandClassifier(ClassifierTrainingState state) throws IOException {
+        if(state.isCurrentlyLearning()) {
+            return;
+        }
+
+        state.setCurrentlyLearning(true);
         setTrainingAndTestingSet();
         List<LabelledDocument> trainingSet = getLabelledDocumentsByBrand(getTrainingSet());
         List<LabelledDocument> testingSet = getLabelledDocumentsByBrand(getTestingSet());
@@ -76,17 +87,23 @@ public class ModelGeneratorService {
         log.info("Use {} documents for validation.", testingSet.size());
 
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
+        state.setCurrentlyLearning(false);
         getModelRepository().save(paragraphVectors, BRAND);
         getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet);
         log.info("Successfully generated brand classifier.");
     }
 
-    public void generateModel() throws IOException, IllegalStateException {
+    public void generateModel(ClassifierTrainingState state) throws IllegalStateException, IOException {
+        if(state.isCurrentlyLearning()) {
+            return;
+        }
+
         if(!getModelRepository().brandClassifierExists()) {
             throw new IllegalStateException("Brand classifier needs to be generated first.");
         }
 
         getClassifier().loadBrandClassifier();
+        state.setCurrentlyLearning(true);
         setTrainingAndTestingSet();
         Instances trainingSet = getInstances(getTrainingSet());
         Instances testingSet = getInstances(getTestingSet());
@@ -118,6 +135,7 @@ public class ModelGeneratorService {
             }
         }
 
+        state.setCurrentlyLearning(false);
         log.info("Successfully generated model.");
 
     }
