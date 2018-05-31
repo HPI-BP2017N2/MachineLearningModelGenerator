@@ -28,11 +28,11 @@
         <!--<nd4j.backend>nd4j-cuda-9.1-platform</nd4j.backend>-->
         <shadedClassifier>bin</shadedClassifier>
 
-        <nd4j.version>1.0.0-alpha</nd4j.version>
-        <dl4j.version>1.0.0-alpha</dl4j.version>
-        <datavec.version>1.0.0-alpha</datavec.version>
-        <arbiter.version>1.0.0-alpha</arbiter.version>
-        <rl4j.version>1.0.0-alpha</rl4j.version>
+        <nd4j.version>1.0.0-beta</nd4j.version>
+        <dl4j.version>1.0.0-beta</dl4j.version>
+        <datavec.version>1.0.0-beta</datavec.version>
+        <arbiter.version>1.0.0-beta</arbiter.version>
+        <rl4j.version>1.0.0-beta</rl4j.version>
 
         <guava.version>19.0</guava.version>
         <logback.version>1.1.7</logback.version>

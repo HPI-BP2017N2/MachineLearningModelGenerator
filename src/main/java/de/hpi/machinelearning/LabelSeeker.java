@@ -1,4 +1,4 @@
-package de.hpi.modelgenerator.services;
+package de.hpi.machinelearning;
 
 import org.nd4j.linalg.primitives.Pair;
 import org.deeplearning4j.models.embeddings.inmemory.InMemoryLookupTable;
@@ -23,10 +23,10 @@ public class LabelSeeker {
         List<Pair<String, Double>> result = new ArrayList<>();
         for (String label: labelsUsed) {
             INDArray vecLabel = lookupTable.vector(label);
-            if (vecLabel == null) throw new IllegalStateException("Label '"+ label+"' has no known vector!");
+            if (vecLabel == null) throw new IllegalStateException("Label '" + label + "' has no known vector!");
 
             double sim = Transforms.cosineSim(vector, vecLabel);
-            result.add(new Pair<String, Double>(label, sim));
+            result.add(new Pair<>(label, sim));
         }
         return result;
     }

@@ -1,16 +1,16 @@
 package de.hpi.modelgenerator.api;
 
-import de.hpi.modelgenerator.dto.ScoredModel;
-import de.hpi.modelgenerator.dto.SerializedParagraphVectors;
+import de.hpi.modelgenerator.persistence.ClassifierTrainingState;
 import de.hpi.modelgenerator.services.ModelGeneratorService;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @Slf4j
@@ -19,19 +19,33 @@ import org.springframework.web.bind.annotation.RestController;
 public class ModelGeneratorController {
 
     private final ModelGeneratorService service;
+    private final ClassifierTrainingState categoryClassifierTrainingState = new ClassifierTrainingState();
+    private final ClassifierTrainingState brandClassifierTrainingState = new ClassifierTrainingState();
+    private final ClassifierTrainingState modelTrainingState = new ClassifierTrainingState();
 
-    @RequestMapping(value = "/getCategoryClassifier/{shopId}", method = RequestMethod.GET, produces = "application/json")
-    public SerializedParagraphVectors getCategoryClassifier(@PathVariable long shopId){
-        return new SerializedParagraphVectors(getService().getCategoryClassifier(shopId));
+    @RequestMapping(value = "/generateCategoryClassifier", method = RequestMethod.POST)
+    public void generateCategoryClassifier() throws IOException {
+        getService().generateCategoryClassifier(getCategoryClassifierTrainingState());
+
     }
 
-    @RequestMapping(value = "/getBrandClassifier/{shopId}", method = RequestMethod.GET, produces = "application/json")
-    public SerializedParagraphVectors getBrandClassifier(@PathVariable long shopId){
-        return new SerializedParagraphVectors(getService().getBrandClassifier(shopId));
+    @RequestMapping(value = "/generateBrandClassifier", method = RequestMethod.POST)
+    public void generateBrandClassifier() throws IOException {
+        getService().generateBrandClassifier(getBrandClassifierTrainingState());
+
     }
 
-    @RequestMapping(value = "getModel", method = RequestMethod.GET, produces = "application/json")
-    public ScoredModel getModel() {
-        return getService().getModel();
+    @RequestMapping(value = "/generateModel", method = RequestMethod.POST)
+    public void generateModel() throws IOException {
+        getService().generateModel(getModelTrainingState());
+    }
+
+    @RequestMapping(value = "/generateAllClassifiers", method = RequestMethod.POST)
+    public void generateAllClassifiers() throws IOException {
+        getService().setTrainingAndTestingSet();
+        generateCategoryClassifier();
+        generateBrandClassifier();
+        generateModel();
+        getService().freeTestingSet();
     }
 }
