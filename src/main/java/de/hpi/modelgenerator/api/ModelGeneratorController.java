@@ -20,7 +20,6 @@ import java.io.IOException;
 public class ModelGeneratorController {
 
     private final ModelGeneratorService service;
-    private final ModelRepository modelRepository;
     private final ClassifierTrainingState categoryClassifierTrainingState = new ClassifierTrainingState();
     private final ClassifierTrainingState brandClassifierTrainingState = new ClassifierTrainingState();
     private final ClassifierTrainingState modelTrainingState = new ClassifierTrainingState();
@@ -29,7 +28,8 @@ public class ModelGeneratorController {
     public void generateCategoryClassifier() throws IOException {
         if (!getCategoryClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateCategoryClassifier(getCategoryClassifierTrainingState());
+            getService().generateCategoryClassifier();
+            getCategoryClassifierTrainingState().setCurrentlyLearning(false);
         }
     }
 
@@ -37,7 +37,8 @@ public class ModelGeneratorController {
     public void generateBrandClassifier() throws IOException {
         if (!getBrandClassifierTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateBrandClassifier(getBrandClassifierTrainingState());
+            getService().generateBrandClassifier();
+            getBrandClassifierTrainingState().setCurrentlyLearning(false);
         }
     }
 
@@ -45,7 +46,8 @@ public class ModelGeneratorController {
     public void generateModel() throws IOException {
         if (!getModelTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
-            getService().generateModel(getModelTrainingState());
+            getService().generateModel();
+            getModelTrainingState().setCurrentlyLearning(false);
         }
     }
 

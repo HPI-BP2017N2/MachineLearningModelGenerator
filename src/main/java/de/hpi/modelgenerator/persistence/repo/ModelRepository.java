@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 public class ModelRepository {
 
     public static final String BRAND = "brand";
+
     @Autowired
     @Qualifier(value = "modelTemplate")
     private MongoTemplate mongoTemplate;

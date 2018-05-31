@@ -3,6 +3,7 @@ package de.hpi.machinelearning.persistence;
 import org.apache.commons.io.FileUtils;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
+import org.deeplearning4j.models.word2vec.VocabWord;
 import org.deeplearning4j.models.word2vec.Word2Vec;
 import org.deeplearning4j.text.documentiterator.LabelsSource;
 
@@ -13,9 +14,11 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class VectorSerializer {
+import static org.deeplearning4j.models.embeddings.loader.WordVectorSerializer.decodeB64;
 
-    public static ParagraphVectors readParagraphVectors(InputStream stream) throws IOException {
+class VectorSerializer {
+
+    static ParagraphVectors readParagraphVectors(InputStream stream) throws IOException {
         File tmpFile = File.createTempFile("restore", "paravec");
         try {
             FileUtils.copyInputStreamToFile(stream, tmpFile);
@@ -30,7 +33,6 @@ public class VectorSerializer {
 
         List<String> labelsList = new LinkedList<>();
         try (ZipFile zipFile = new ZipFile(file)) {
-            // now we try to restore labels information
             ZipEntry labels = zipFile.getEntry("labels.txt");
 
             if (labels != null) {
@@ -38,7 +40,11 @@ public class VectorSerializer {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        labelsList.add(WordVectorSerializer.decodeB64(line.trim()));
+                        VocabWord word = w2v.getVocab().tokenFor(decodeB64(line.trim()));
+                        if (word != null) {
+                            word.markAsLabel(true);
+                            labelsList.add(decodeB64(line.trim()));
+                        }
                     }
                 }
             }
@@ -52,4 +58,3 @@ public class VectorSerializer {
     }
 
 }
-

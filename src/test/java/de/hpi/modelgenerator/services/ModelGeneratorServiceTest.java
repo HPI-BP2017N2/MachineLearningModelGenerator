@@ -58,7 +58,6 @@ public class ModelGeneratorServiceTest {
     @Mock private ModelRepository modelRepository;
     @Mock private Cache cache;
     @Mock private ModelGeneratorProperties properties;
-    @Mock private ClassifierTrainingState state;
     @Mock private MatchingModels matchingModels;
     @Mock private ProbabilityClassifier probabilityClassifier;
     @Mock private NeuralNetClassifier neuralNetClassifier;
@@ -115,11 +114,10 @@ public class ModelGeneratorServiceTest {
         doReturn(getParagraphVectors()).when(getNeuralNetClassifier()).getParagraphVectors(anyList());
         doNothing().when(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
 
-        getService().generateCategoryClassifier(getState());
+        getService().generateCategoryClassifier();
 
         verify(getNeuralNetClassifier()).getParagraphVectors(anyList());
         verify(getModelRepository()).save(any(ParagraphVectors.class), eq(CATEGORY));
-        verify(getState()).setCurrentlyLearning(false);
     }
 
     @Test
@@ -127,11 +125,10 @@ public class ModelGeneratorServiceTest {
         doReturn(getParagraphVectors()).when(getNeuralNetClassifier()).getParagraphVectors(anyList());
         doNothing().when(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
 
-        getService().generateBrandClassifier(getState());
+        getService().generateBrandClassifier();
 
         verify(getNeuralNetClassifier()).getParagraphVectors(anyList());
         verify(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
-        verify(getState()).setCurrentlyLearning(false);
     }
 
     @Test
@@ -150,8 +147,7 @@ public class ModelGeneratorServiceTest {
         doReturn(null).when(getCache()).getOffer(anyLong(), anyString());
         doReturn(1d).when(getMatchingModels()).getClassificationError(any(Classifier.class), any(Instances.class));
 
-        getService().generateModel(getState());
-        verify(getState()).setCurrentlyLearning(false);
+        getService().generateModel();
         verify(getMatchingModels()).getAdaBoost(any(Instances.class));
         verify(getMatchingModels()).getJ48(any(Instances.class));
         verify(getMatchingModels()).getKNN(any(Instances.class));
@@ -165,7 +161,7 @@ public class ModelGeneratorServiceTest {
     public void doNotGenerateModelWhenNoBrandClassifier() throws IOException {
         doReturn(false).when(getModelRepository()).brandClassifierExists();
 
-        getService().generateModel(getState());
+        getService().generateModel();
 
     }
 }

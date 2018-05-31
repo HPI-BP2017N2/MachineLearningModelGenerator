@@ -2,8 +2,6 @@ package de.hpi.modelgenerator.services;
 
 import de.hpi.machinelearning.LabelSeeker;
 import de.hpi.machinelearning.MeansBuilder;
-import de.hpi.machinelearning.persistence.FeatureInstance;
-import de.hpi.machinelearning.persistence.ScoredModel;
 import de.hpi.modelgenerator.persistence.repo.ModelRepository;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,13 +12,11 @@ import org.deeplearning4j.models.embeddings.inmemory.InMemoryLookupTable;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.deeplearning4j.models.word2vec.VocabWord;
 import org.deeplearning4j.text.documentiterator.LabelledDocument;
-import org.deeplearning4j.text.tokenization.tokenizer.preprocessor.CommonPreprocessor;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.primitives.Pair;
 import org.springframework.stereotype.Service;
-import weka.classifiers.Classifier;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,7 +35,7 @@ public class ProbabilityClassifier {
     private MeansBuilder brandMeansBuilder;
     private LabelSeeker brandLabelSeeker;
 
-    public Pair<String, Double> getBrand(String offerTitle) {
+    Pair<String, Double> getBrand(String offerTitle) {
         LabelledDocument document = getLabelledDocumentFromTitle(offerTitle);
         INDArray documentAsCentroid = getBrandMeansBuilder().documentAsVector(document);
         List<Pair<String, Double>> scores = getBrandLabelSeeker().getScores(documentAsCentroid);
@@ -47,7 +43,7 @@ public class ProbabilityClassifier {
         return getBestScoredLabel(scores);
     }
 
-    public void loadBrandClassifier() throws IOException {
+    void loadBrandClassifier() throws IOException {
         setBrandClassifier(getModelRepository().getBrandClassifier());
         setBrandMeansBuilder(new MeansBuilder(
                 (InMemoryLookupTable<VocabWord>)getBrandClassifier().getLookupTable(),

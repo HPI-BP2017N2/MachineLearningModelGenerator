@@ -51,7 +51,7 @@ public class ModelGeneratorService {
     private List<MatchingResult> trainingSet;
     private List<MatchingResult> testingSet;
 
-    public void generateCategoryClassifier(ClassifierTrainingState state) throws IOException {
+    public void generateCategoryClassifier() throws IOException {
         setTrainingAndTestingSet();
         List<LabelledDocument> trainingSet = getLabelledDocumentsByCategory(getTrainingSet());
         List<LabelledDocument> testingSet = getLabelledDocumentsByCategory(getTestingSet());
@@ -63,11 +63,10 @@ public class ModelGeneratorService {
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
         getModelRepository().save(paragraphVectors, CATEGORY);
         getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet);
-        state.setCurrentlyLearning(false);
         log.info("Successfully generated category classifier.");
     }
 
-    public void generateBrandClassifier(ClassifierTrainingState state) throws IOException {
+    public void generateBrandClassifier() throws IOException {
         setTrainingAndTestingSet();
         List<LabelledDocument> trainingSet = getLabelledDocumentsByBrand(getTrainingSet());
         List<LabelledDocument> testingSet = getLabelledDocumentsByBrand(getTestingSet());
@@ -79,11 +78,10 @@ public class ModelGeneratorService {
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
         getModelRepository().save(paragraphVectors, BRAND);
         getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet);
-        state.setCurrentlyLearning(false);
         log.info("Successfully generated brand classifier.");
     }
 
-    public void generateModel(ClassifierTrainingState state) throws IOException, IllegalStateException {
+    public void generateModel() throws IOException, IllegalStateException {
         if(!getModelRepository().brandClassifierExists()) {
             throw new IllegalStateException("Brand classifier needs to be generated first.");
         }
@@ -120,7 +118,6 @@ public class ModelGeneratorService {
             }
         }
 
-        state.setCurrentlyLearning(false);
         log.info("Successfully generated model.");
 
     }
@@ -190,7 +187,7 @@ public class ModelGeneratorService {
         return document;
     }
 
-    private Instances getInstances(List<MatchingResult> matchingResults) throws IOException {
+    private Instances getInstances(List<MatchingResult> matchingResults) {
         log.info("Start generating training and testing set at for model at {}", new Date());
         ArrayList<Attribute> features = new AttributeVector();
         Instances instanceSet = new Instances("Rel", features, matchingResults.size());

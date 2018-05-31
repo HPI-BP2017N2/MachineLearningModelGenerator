@@ -32,7 +32,7 @@ public class MatchingModels {
     private static final String J48 = "j48";
     private static final String ADA_BOOST = "adaBoost";
 
-    public LabeledModel getNaiveBayes(Instances trainingSet) {
+    LabeledModel getNaiveBayes(Instances trainingSet) {
         Classifier cModel = new NaiveBayes();
         try {
             cModel.buildClassifier(trainingSet);
@@ -43,7 +43,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, NAIVE_BAYES);
     }
 
-    public LabeledModel getLogistic(Instances trainingSet) {
+    LabeledModel getLogistic(Instances trainingSet) {
         Classifier cModel = new Logistic();
         try {
             cModel.buildClassifier(trainingSet);
@@ -54,7 +54,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, LOGISTIC);
     }
 
-    public LabeledModel getRandomForest(Instances trainingSet) {
+    LabeledModel getRandomForest(Instances trainingSet) {
         Classifier cModel = new RandomForest();
         try {
             cModel.buildClassifier(trainingSet);
@@ -65,7 +65,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, RANDOM_FOREST);
     }
 
-    public LabeledModel getKNN(Instances trainingSet) {
+    LabeledModel getKNN(Instances trainingSet) {
         Classifier cModel = new IBk();
         try {
             cModel.buildClassifier(trainingSet);
@@ -87,7 +87,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, LINEAR_REGRESSION);
     }
 
-    public LabeledModel getJ48(Instances trainingSet) {
+    LabeledModel getJ48(Instances trainingSet) {
         Classifier cModel = new J48();
         try {
             cModel.buildClassifier(trainingSet);
@@ -98,7 +98,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, J48);
     }
 
-    public LabeledModel getAdaBoost(Instances trainingSet) {
+    LabeledModel getAdaBoost(Instances trainingSet) {
         Classifier cModel = new AdaBoostM1();
         try {
             cModel.buildClassifier(trainingSet);
@@ -109,8 +109,7 @@ public class MatchingModels {
         return new LabeledModel(cModel, ADA_BOOST);
     }
 
-    public double getClassificationError(Classifier cModel, Instances trainingSet) {
-        System.out.println("score!!!!!!!!!!!!!!");
+    double getClassificationError(Classifier cModel, Instances trainingSet) {
         try {
             Evaluation eTest = new Evaluation(trainingSet);
             eTest.evaluateModel(cModel, trainingSet);

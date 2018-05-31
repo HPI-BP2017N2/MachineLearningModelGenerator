@@ -30,7 +30,7 @@ import java.util.Set;
 @Service
 public class NeuralNetClassifier {
 
-    public ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
+    ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
 
         TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
         tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
@@ -49,7 +49,7 @@ public class NeuralNetClassifier {
         return paragraphVectors;
     }
 
-    public void checkUnlabeledData(ParagraphVectors paragraphVectors,  List<LabelledDocument> testingSet) {
+    void checkUnlabeledData(ParagraphVectors paragraphVectors, List<LabelledDocument> testingSet) {
         TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
         tokenizerFactory.setTokenPreProcessor(new CommonPreprocessor());
 
