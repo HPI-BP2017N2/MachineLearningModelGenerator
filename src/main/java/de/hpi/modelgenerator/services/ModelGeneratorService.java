@@ -3,7 +3,6 @@ package de.hpi.modelgenerator.services;
 import de.hpi.machinelearning.persistence.AttributeVector;
 import de.hpi.machinelearning.persistence.FeatureInstance;
 import de.hpi.machinelearning.persistence.LabeledModel;
-import de.hpi.machinelearning.persistence.SerializedParagraphVectors;
 import de.hpi.modelgenerator.persistence.ClassifierTrainingState;
 import de.hpi.modelgenerator.persistence.MatchingResult;
 import de.hpi.modelgenerator.persistence.ShopOffer;
@@ -18,6 +17,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.deeplearning4j.text.documentiterator.LabelledDocument;
+import org.nd4j.linalg.primitives.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import weka.core.Attribute;
@@ -46,6 +46,7 @@ public class ModelGeneratorService {
     private final Cache cache;
     private final NeuralNetClassifier neuralNetClassifier;
     private final MatchingModels matchingModels;
+    private final ProbabilityClassifier classifier;
 
     private List<MatchingResult> trainingSet;
     private List<MatchingResult> testingSet;
@@ -82,7 +83,12 @@ public class ModelGeneratorService {
         log.info("Successfully generated brand classifier.");
     }
 
-    public void generateModel(ClassifierTrainingState state) {
+    public void generateModel(ClassifierTrainingState state) throws IOException, IllegalStateException {
+        if(!getModelRepository().brandClassifierExists()) {
+            throw new IllegalStateException("Brand classifier needs to be generated first.");
+        }
+
+        getClassifier().loadBrandClassifier();
         setTrainingAndTestingSet();
         Instances trainingSet = getInstances(getTrainingSet());
         Instances testingSet = getInstances(getTestingSet());
@@ -184,7 +190,7 @@ public class ModelGeneratorService {
         return document;
     }
 
-    private Instances getInstances(List<MatchingResult> matchingResults) {
+    private Instances getInstances(List<MatchingResult> matchingResults) throws IOException {
         log.info("Start generating training and testing set at for model at {}", new Date());
         ArrayList<Attribute> features = new AttributeVector();
         Instances instanceSet = new Instances("Rel", features, matchingResults.size());
@@ -195,8 +201,10 @@ public class ModelGeneratorService {
         for(int i = 0; i < numbers.size() / 2; i ++) {
             MatchingResult result = matchingResults.get(numbers.get(i));
             try {
+
                 ShopOffer shopOffer = getCache().getOffer(result.getShopId(), result.getOfferKey());
-                Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), true);
+                String brand = getBrand(result.getParsedData().getTitle());
+                Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), true, brand);
                 instanceSet.add(instance);
 
             } catch (HttpClientErrorException e) {
@@ -211,7 +219,8 @@ public class ModelGeneratorService {
             try {
                 ShopOffer shopOffer = getCache().getOffer(result.getShopId(), matchingResults.get(nonMatchIndex).getOfferKey());
                 if(shopOffer != null) {
-                    Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), false);
+                    String brand = getBrand(result.getParsedData().getTitle());
+                    Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), false, brand);
                     instanceSet.add(instance);
                 }
             } catch (HttpClientErrorException e) {
@@ -233,5 +242,15 @@ public class ModelGeneratorService {
         } while(random == excludedValue);
         return random;
     }
+
+    private String getBrand(String offerTitle) {
+        if(offerTitle != null) {
+            Pair<String, Double> pair = getClassifier().getBrand(offerTitle);
+            return pair.getRight() < getProperties().getLabelThreshold() ? null : pair.getLeft();
+        }
+
+        return null;
+    }
+
 
 }

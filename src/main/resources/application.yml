@@ -5,6 +5,7 @@ modelgenerator:
  matchesPerShop: 1000
  maximumMatchesForLearning: 500000
  testSetPercentage: 0.9
+ labelThreshold: 0.5
 
 models:
  mongodb:

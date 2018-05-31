@@ -7,9 +7,7 @@ import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.paragraphvectors.ParagraphVectors;
 import org.springframework.data.annotation.Id;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -24,5 +22,10 @@ public class SerializedParagraphVectors {
 
         this.serializedNeuralNetwork = ((ByteArrayOutputStream) out).toByteArray();
         this.networkType = type;
+    }
+
+    public ParagraphVectors getNeuralNetwork() throws IOException {
+        InputStream in = new ByteArrayInputStream(getSerializedNeuralNetwork());
+        return VectorSerializer.readParagraphVectors(in);
     }
 }

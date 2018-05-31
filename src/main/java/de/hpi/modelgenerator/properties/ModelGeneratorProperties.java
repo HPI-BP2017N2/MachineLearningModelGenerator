@@ -18,5 +18,6 @@ public class ModelGeneratorProperties {
     private int matchesPerShop;
     private int maximumMatchesForLearning;
     private double testSetPercentage;
+    private double labelThreshold;
 
 }

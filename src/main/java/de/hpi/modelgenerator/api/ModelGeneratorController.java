@@ -42,7 +42,7 @@ public class ModelGeneratorController {
     }
 
     @RequestMapping(value = "/generateModel", method = RequestMethod.POST)
-    public void generateModel() {
+    public void generateModel() throws IOException {
         if (!getModelTrainingState().isCurrentlyLearning()) {
             getCategoryClassifierTrainingState().setCurrentlyLearning(true);
             getService().generateModel(getModelTrainingState());

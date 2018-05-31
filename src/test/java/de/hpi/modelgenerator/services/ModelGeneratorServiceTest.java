@@ -60,11 +60,13 @@ public class ModelGeneratorServiceTest {
     @Mock private ModelGeneratorProperties properties;
     @Mock private ClassifierTrainingState state;
     @Mock private MatchingModels matchingModels;
+    @Mock private ProbabilityClassifier probabilityClassifier;
     @Mock private NeuralNetClassifier neuralNetClassifier;
     @Mock private ParagraphVectors paragraphVectors;
     @Mock private Classifier classifier;
 
     private ModelGeneratorService service;
+
     @Before
     public void setup() {
         initMocks(this);
@@ -75,7 +77,8 @@ public class ModelGeneratorServiceTest {
                 getMatchingResultRepository(),
                 getCache(),
                 getNeuralNetClassifier(),
-                getMatchingModels()
+                getMatchingModels(),
+                getProbabilityClassifier()
         ));
 
         ParsedOffer parsedOffer = new ParsedOffer();
@@ -132,9 +135,11 @@ public class ModelGeneratorServiceTest {
     }
 
     @Test
-    public void generateModel() {
+    public void generateModel() throws IOException {
         doReturn(getParagraphVectors()).when(getNeuralNetClassifier()).getParagraphVectors(anyList());
+        doReturn(true).when(getModelRepository()).brandClassifierExists();
         doNothing().when(getModelRepository()).save(any(ScoredModel.class));
+
 
         doReturn(getEXAMPLE_MODEL()).when(getMatchingModels()).getLogistic(any(Instances.class));
         doReturn(getEXAMPLE_MODEL()).when(getMatchingModels()).getAdaBoost(any(Instances.class));
@@ -154,5 +159,13 @@ public class ModelGeneratorServiceTest {
         verify(getMatchingModels()).getRandomForest(any(Instances.class));
         verify(getMatchingModels()).getLogistic(any(Instances.class));
         verify(getModelRepository()).save(any(ScoredModel.class));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void doNotGenerateModelWhenNoBrandClassifier() throws IOException {
+        doReturn(false).when(getModelRepository()).brandClassifierExists();
+
+        getService().generateModel(getState());
+
     }
 }
