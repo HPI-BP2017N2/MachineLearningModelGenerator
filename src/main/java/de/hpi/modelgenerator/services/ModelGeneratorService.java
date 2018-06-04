@@ -51,6 +51,12 @@ public class ModelGeneratorService {
     private List<MatchingResult> trainingSet;
     private List<MatchingResult> testingSet;
 
+    /**
+     * This method generates and saves a neural network for labelling the category of an offer.
+     * If necessary, the training set will be created.
+     * @param state Mutex to avoid multiple generation of classifier
+     * @throws IOException when classifier cannot be serialized
+     */
     public void generateCategoryClassifier(ClassifierTrainingState state) throws IOException {
         if(state.isCurrentlyLearning()) {
             return;
@@ -72,6 +78,12 @@ public class ModelGeneratorService {
         log.info("Successfully generated category classifier.");
     }
 
+    /**
+     * This method generates and saves a neural network for labelling the brand of an offer.
+     * If necessary, the training set will be created.
+     * @param state Mutex to avoid multiple generation of classifier
+     * @throws IOException when classifier cannot be serialized
+     */
     public void generateBrandClassifier(ClassifierTrainingState state) throws IOException {
         if(state.isCurrentlyLearning()) {
             return;
@@ -93,6 +105,15 @@ public class ModelGeneratorService {
         log.info("Successfully generated brand classifier.");
     }
 
+    /**
+     * This method generates and saves a model for classifying whether two offers match or not.
+     * Multiple classifiers will be trained and the best one (lowest classification error) is chosen.
+     * If necessary, the training and testing sets set will be created.
+     * This method needs the brand classifier to be generated first, since it is necessary for a feature.
+     * @param state Mutex to avoid multiple generation of classifier
+     * @throws IllegalStateException when brand classifier is not present
+     * @throws IOException when brand classifier cannot be deserialized
+     */
     public void generateModel(ClassifierTrainingState state) throws IllegalStateException, IOException {
         if(state.isCurrentlyLearning()) {
             return;
@@ -140,13 +161,24 @@ public class ModelGeneratorService {
 
     }
 
+    /**
+     * This method deletes training and testing set.
+     */
     public void freeTestingSet() {
         setTestingSet(null);
         setTrainingSet(null);
         System.gc();
     }
 
-    public void setTrainingAndTestingSet() {
+    /**
+     * This method deletes training and testing set and loads them again.
+     */
+    public void refreshTrainingAndTestingSet() {
+        freeTestingSet();
+        setTrainingAndTestingSet();
+    }
+
+    void setTrainingAndTestingSet() {
         if(!trainingAndTestingSetExist()) {
             log.info("Start loading training and testing set at {}", new Date());
             List<MatchingResult> completeDataSet = new LinkedList<>();
@@ -161,7 +193,7 @@ public class ModelGeneratorService {
 
             List<Integer> numbers = IntStream.range(0, completeDataSet.size()).boxed().collect(Collectors.toCollection(LinkedList::new));
             Collections.shuffle(numbers);
-            int trainingSetSize = (int) (getProperties().getTestSetPercentage() * numbers.size());
+            int trainingSetSize = (int) (getProperties().getTrainingSetPercentage() * numbers.size());
             setTrainingSet(IntStream.range(0, trainingSetSize).mapToObj(completeDataSet::get).collect(Collectors.toList()));
             setTestingSet(IntStream.range(trainingSetSize, numbers.size()).mapToObj(completeDataSet::get).collect(Collectors.toList()));
             log.info("Finished loading training and testing set at {}", new Date());

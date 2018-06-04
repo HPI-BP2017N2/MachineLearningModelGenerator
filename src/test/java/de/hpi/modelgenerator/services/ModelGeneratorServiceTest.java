@@ -96,7 +96,7 @@ public class ModelGeneratorServiceTest {
 
         doReturn(getEXAMPLE_MAX_RESULTS()).when(getProperties()).getMaximumMatchesForLearning();
         doReturn(getEXAMPLE_RESULTS_PER_SHOP()).when(getProperties()).getMatchesPerShop();
-        doReturn(getEXAMPLE_TEST_SET_PERCENTAGE()).when(getProperties()).getTestSetPercentage();
+        doReturn(getEXAMPLE_TEST_SET_PERCENTAGE()).when(getProperties()).getTrainingSetPercentage();
         doReturn(shopIds).when(getMatchingResultRepository()).getShopIds();
         doReturn(getExampleMatchingResults()).when(getMatchingResultRepository()).getMatches(anyLong(), anyInt());
     }
