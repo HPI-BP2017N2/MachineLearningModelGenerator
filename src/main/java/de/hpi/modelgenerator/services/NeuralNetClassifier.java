@@ -28,7 +28,7 @@ import java.util.Set;
 @Setter(AccessLevel.PRIVATE)
 @Slf4j
 @Service
-public class NeuralNetClassifier {
+class NeuralNetClassifier {
 
     ParagraphVectors getParagraphVectors(List<LabelledDocument> documents) {
 

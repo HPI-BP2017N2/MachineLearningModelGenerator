@@ -26,7 +26,7 @@ import java.util.List;
 @Setter(AccessLevel.PRIVATE)
 @Slf4j
 @RequiredArgsConstructor
-public class ProbabilityClassifier {
+class ProbabilityClassifier {
 
     private final ModelRepository modelRepository;
     private final TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();

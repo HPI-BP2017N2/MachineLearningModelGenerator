@@ -22,7 +22,7 @@ import weka.core.Instances;
 @Getter(AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
 @Slf4j
-public class MatchingModels {
+class MatchingModels {
 
     private static final String NAIVE_BAYES = "naiveBayes";
     private static final String LOGISTIC = "logistic";
