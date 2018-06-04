@@ -8,10 +8,10 @@ It is written in Java and uses the Spring framework.
  The model generator requests specific offers of idealo from [the cache](https://github.com/HPI-BP2017N2/Cache).
 2. MongoDB  
  The model generator uses  MongoDB for storing the classifiers and load training data.  
- 2.2. One database is used for loading the results of the matching process. Those data are used for training the classifiers. It is expected that those information is separated into multiple collections (one for every shop, named by the corresponding shop ID).  
-2.4. One database is used for saving the different classifiers used by [the matcher](https://github.com/HPI-BP2017N2/Matcher). It is expected to have two collections.   
-  2.4.1. One collection is named scoredModel. It contains a serialized classifier used for deciding whether a parsed offer and an idealo offer match or not.  
-  2.4.2. One collection is named serializedParagraphVectors. It contains one serialized neural network each for classifying the brand and the category of a parsed offer.  
+ 2.1. One database is used for loading the results of the matching process. Those data are used for training the classifiers. It is expected that those information is separated into multiple collections (one for every shop, named by the corresponding shop ID).  
+2.2. One database is used for saving the different classifiers used by [the matcher](https://github.com/HPI-BP2017N2/Matcher). It is expected to have two collections.   
+  2.2.1. One collection is named scoredModel. It contains a serialized classifier used for deciding whether a parsed offer and an idealo offer match or not.  
+  2.2.2. One collection is named serializedParagraphVectors. It contains one serialized neural network each for classifying the brand and the category of a parsed offer.  
   
 ### Configuration
 #### Environment variables
