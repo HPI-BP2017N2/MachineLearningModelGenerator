@@ -42,7 +42,7 @@ public class ModelGeneratorController {
 
     @RequestMapping(value = "/generateAllClassifiers", method = RequestMethod.POST)
     public void generateAllClassifiers() throws IOException {
-        getService().setTrainingAndTestingSet();
+        getService().refreshTrainingAndTestingSet();
         generateCategoryClassifier();
         generateBrandClassifier();
         generateModel();

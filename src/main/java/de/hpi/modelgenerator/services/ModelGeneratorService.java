@@ -146,6 +146,11 @@ public class ModelGeneratorService {
         System.gc();
     }
 
+    public void refreshTrainingAndTestingSet() {
+        freeTestingSet();
+        setTrainingAndTestingSet();
+    }
+
     public void setTrainingAndTestingSet() {
         if(!trainingAndTestingSetExist()) {
             log.info("Start loading training and testing set at {}", new Date());
@@ -161,7 +166,7 @@ public class ModelGeneratorService {
 
             List<Integer> numbers = IntStream.range(0, completeDataSet.size()).boxed().collect(Collectors.toCollection(LinkedList::new));
             Collections.shuffle(numbers);
-            int trainingSetSize = (int) (getProperties().getTestSetPercentage() * numbers.size());
+            int trainingSetSize = (int) (getProperties().getTrainingSetPercentage() * numbers.size());
             setTrainingSet(IntStream.range(0, trainingSetSize).mapToObj(completeDataSet::get).collect(Collectors.toList()));
             setTestingSet(IntStream.range(trainingSetSize, numbers.size()).mapToObj(completeDataSet::get).collect(Collectors.toList()));
             log.info("Finished loading training and testing set at {}", new Date());
