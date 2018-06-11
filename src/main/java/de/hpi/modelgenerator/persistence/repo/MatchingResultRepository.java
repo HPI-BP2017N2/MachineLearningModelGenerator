@@ -27,6 +27,6 @@ public class MatchingResultRepository {
     }
     
     public List<MatchingResult> getMatches(long shopId, int count) {
-        return getMongoTemplate().find(Query.query(where("offerKey").exists(true)).limit(count), MatchingResult.class, Long.toString(shopId));
+        return getMongoTemplate().find(Query.query(where("offerKey").ne(null).and("offerKey").ne("").and("parsedData.matchingReason").is("ean")).limit(count), MatchingResult.class, Long.toString(shopId));
     }
 }
