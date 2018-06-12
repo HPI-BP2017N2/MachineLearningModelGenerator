@@ -8,11 +8,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.table.TableRowSorter;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 @Repository
 @Getter
@@ -27,6 +29,6 @@ public class MatchingResultRepository {
     }
     
     public List<MatchingResult> getMatches(long shopId, int count) {
-        return getMongoTemplate().find(Query.query(where("offerKey").ne(null).and("offerKey").ne("").and("parsedData.matchingReason").is("ean")).limit(count), MatchingResult.class, Long.toString(shopId));
+        return getMongoTemplate().find(query(where("offerKey").ne(null).and("matchingReason").is("ean")).limit(count), MatchingResult.class, Long.toString(shopId));
     }
 }

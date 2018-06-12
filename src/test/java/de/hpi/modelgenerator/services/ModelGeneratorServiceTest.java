@@ -7,7 +7,8 @@ import de.hpi.modelgenerator.persistence.MatchingResult;
 import de.hpi.modelgenerator.persistence.ParsedOffer;
 import de.hpi.modelgenerator.persistence.repo.Cache;
 import de.hpi.modelgenerator.persistence.repo.MatchingResultRepository;
-import de.hpi.modelgenerator.persistence.repo.ModelRepository;
+import de.hpi.modelgenerator.persistence.repo.ModelFileRepository;
+import de.hpi.modelgenerator.persistence.repo.ModelMongoRepository;
 import de.hpi.modelgenerator.properties.ModelGeneratorProperties;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -55,7 +56,7 @@ public class ModelGeneratorServiceTest {
     private final List<MatchingResult> exampleMatchingResults = new LinkedList<>();
 
     @Mock private MatchingResultRepository matchingResultRepository;
-    @Mock private ModelRepository modelRepository;
+    @Mock private ModelMongoRepository modelRepository;
     @Mock private Cache cache;
     @Mock private ModelGeneratorProperties properties;
     @Mock private MatchingModels matchingModels;
@@ -108,13 +109,12 @@ public class ModelGeneratorServiceTest {
 
         verify(getMatchingResultRepository()).getShopIds();
         verify(getMatchingResultRepository(), times(1)).getMatches(anyLong(), anyInt());
-
     }
 
     @Test
     public void generateCategoryClassifier() throws IOException {
         doReturn(getParagraphVectors()).when(getNeuralNetClassifier()).getParagraphVectors(anyList());
-        doNothing().when(getModelRepository()).save(any(ParagraphVectors.class), eq(BRAND));
+        doNothing().when(getModelRepository()).save(any(ParagraphVectors.class), eq(CATEGORY));
 
         getService().generateCategoryClassifier(getState());
 

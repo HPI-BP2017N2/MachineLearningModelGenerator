@@ -8,7 +8,8 @@ import de.hpi.modelgenerator.persistence.MatchingResult;
 import de.hpi.modelgenerator.persistence.ShopOffer;
 import de.hpi.modelgenerator.persistence.repo.Cache;
 import de.hpi.modelgenerator.persistence.repo.MatchingResultRepository;
-import de.hpi.modelgenerator.persistence.repo.ModelRepository;
+import de.hpi.modelgenerator.persistence.repo.ModelFileRepository;
+import de.hpi.modelgenerator.persistence.repo.ModelMongoRepository;
 import de.hpi.modelgenerator.properties.ModelGeneratorProperties;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -40,7 +41,7 @@ public class ModelGeneratorService {
     private static final String CATEGORY = "category";
     private static final String BRAND = "brand";
 
-    private final ModelRepository modelRepository;
+    private final ModelMongoRepository modelRepository;
     private final ModelGeneratorProperties properties;
     private final MatchingResultRepository matchingResultRepository;
     private final Cache cache;
@@ -74,7 +75,6 @@ public class ModelGeneratorService {
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
         state.setCurrentlyLearning(false);
         getModelRepository().save(paragraphVectors, CATEGORY);
-        getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet);
         log.info("Successfully generated category classifier.");
     }
 
@@ -101,7 +101,6 @@ public class ModelGeneratorService {
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
         state.setCurrentlyLearning(false);
         getModelRepository().save(paragraphVectors, BRAND);
-        getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet);
         log.info("Successfully generated brand classifier.");
     }
 
@@ -126,8 +125,10 @@ public class ModelGeneratorService {
         getClassifier().loadBrandClassifier();
         state.setCurrentlyLearning(true);
         setTrainingAndTestingSet();
+        log.info("Start generating training and testing set for model at {}", new Date());
         Instances trainingSet = getInstances(getTrainingSet());
         Instances testingSet = getInstances(getTestingSet());
+        log.info("Finished generating training and testing set for model at {}", new Date());
         List<LabeledModel> models = new LinkedList<>();
         Map<Double, String> scoredModels = new HashMap<>();
 
@@ -219,14 +220,18 @@ public class ModelGeneratorService {
 
     private List<LabelledDocument> getLabelledDocumentsByBrand(List<MatchingResult> matchingResults) {
         List<LabelledDocument> documents = new LinkedList<>();
+
         for(MatchingResult matchingResult : matchingResults) {
-            String brand = matchingResult.getIdealoBrand();
-            String title = matchingResult.getParsedData().getTitle();
-            if(brand != null && title != null) {
-                documents.add(getLabelledDocument(title, brand));
+            try {
+                ShopOffer shopOffer = getCache().getOffer(matchingResult.getShopId(), matchingResult.getOfferKey());
+                String title = matchingResult.getParsedData().getTitle();
+                if (shopOffer != null && title != null && shopOffer.getBrandName() != null) {
+                    documents.add(getLabelledDocument(title, shopOffer.getBrandName()));
+                }
+            } catch (HttpClientErrorException e) {
+                e.printStackTrace();
             }
         }
-
         return documents;
     }
 
@@ -238,7 +243,6 @@ public class ModelGeneratorService {
     }
 
     private Instances getInstances(List<MatchingResult> matchingResults) {
-        log.info("Start generating training and testing set at for model at {}", new Date());
         ArrayList<Attribute> features = new AttributeVector();
         Instances instanceSet = new Instances("Rel", features, matchingResults.size());
         List<Integer> numbers = IntStream.range(0, matchingResults.size()).boxed().collect(Collectors.toCollection(LinkedList::new));
@@ -248,8 +252,8 @@ public class ModelGeneratorService {
         for(int i = 0; i < numbers.size() / 2; i ++) {
             MatchingResult result = matchingResults.get(numbers.get(i));
             try {
-
                 ShopOffer shopOffer = getCache().getOffer(result.getShopId(), result.getOfferKey());
+                if(shopOffer == null) continue;
                 String brand = getBrand(result.getParsedData().getTitle());
                 Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), true, brand);
                 instanceSet.add(instance);
@@ -275,8 +279,7 @@ public class ModelGeneratorService {
             }
         }
 
-        log.info("Finished generating training and testing set at for model at {}", new Date());
-
+        instanceSet.setClassIndex(12);
         return instanceSet;
     }
 
@@ -293,6 +296,9 @@ public class ModelGeneratorService {
     private String getBrand(String offerTitle) {
         if(offerTitle != null) {
             Pair<String, Double> pair = getClassifier().getBrand(offerTitle);
+            if(pair == null) {
+                return null;
+            }
             return pair.getRight() < getProperties().getLabelThreshold() ? null : pair.getLeft();
         }
 
