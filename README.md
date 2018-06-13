@@ -38,3 +38,7 @@ It is written in Java and uses the Spring framework.
 3. The MLMG trains the requested classifier(s).
 4. If model was requested, the MLMG evaluates all trained models on the training set and chooses the best one.
 5. The classifier(s) are stored in file system.
+
+## Future work
+- do not store models in file system
+- change training and testing set generation to get non-matches with a high similarity
