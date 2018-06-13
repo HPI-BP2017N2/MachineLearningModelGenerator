@@ -44,8 +44,13 @@ public class FeatureInstance extends DenseInstance {
         return (a == null || b == null) ? AttributeVector.NULL : a.toLowerCase().equals(b.toLowerCase())? AttributeVector.TRUE : AttributeVector.FALSE;
     }
 
-    private double getPercentualDeviance(double a, String b) {
+    private double getPercentualDeviance(Double a, String b) {
         double bValue;
+
+        if(a == null || b == null) {
+            return -1;
+        }
+
         try {
             bValue = Double.valueOf(b);
         } catch (NumberFormatException e) {

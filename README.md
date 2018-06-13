@@ -7,11 +7,12 @@ It is written in Java and uses the Spring framework.
 1. Cache  
  The model generator requests specific offers of idealo from [the cache](https://github.com/HPI-BP2017N2/Cache).
 2. MongoDB  
- The model generator uses  MongoDB for storing the classifiers and load training data.  
- 2.1. One database is used for loading the results of the matching process. Those data are used for training the classifiers. It is expected that those information is separated into multiple collections (one for every shop, named by the corresponding shop ID).  
-2.2. One database is used for saving the different classifiers used by [the matcher](https://github.com/HPI-BP2017N2/Matcher). It is expected to have two collections.   
-  2.2.1. One collection is named scoredModel. It contains a serialized classifier used for deciding whether a parsed offer and an idealo offer match or not.  
-  2.2.2. One collection is named serializedParagraphVectors. It contains one serialized neural network each for classifying the brand and the category of a parsed offer.  
+ The model generator uses  MongoDB for loading the results of the matching process. Those data are used for training the classifiers. It is expected that those information is separated into multiple collections (one for every shop, named by the corresponding shop ID).
+3. File System   
+ The model generator saves he different classifiers used by [the matcher](https://github.com/HPI-BP2017N2/Matcher) on disk in a folder named "models".  
+  3.1. One file is named model.json. It contains a serialized classifier used for deciding whether a parsed offer and an idealo offer match or not.  
+  3.2. One file is named category.json. It contains one serialized neural network for classifying the category of a parsed offer.  
+  3.3. One file is named brand.json. It contains one serialized neural network for classifying the brand of a parsed offer.  
   
 ### Configuration
 #### Environment variables
@@ -36,4 +37,4 @@ It is written in Java and uses the Spring framework.
  2.2. For generation of the model, 50% of matching results are used for match class, 50% are shuffled for not-match class.
 3. The MLMG trains the requested classifier(s).
 4. If model was requested, the MLMG evaluates all trained models on the training set and chooses the best one.
-5. The classifier(s) are stored in the database.
+5. The classifier(s) are stored in file system.
