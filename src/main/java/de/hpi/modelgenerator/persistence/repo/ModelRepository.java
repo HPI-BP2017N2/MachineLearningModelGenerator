@@ -13,5 +13,9 @@ public interface ModelRepository {
 
      ParagraphVectors getBrandClassifier() throws IOException;
 
+     ParagraphVectors getCategoryClassifier() throws IOException;
+
      boolean brandClassifierExists();
+
+     boolean categoryClassifierExists();
 }

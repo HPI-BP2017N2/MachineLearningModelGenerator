@@ -28,8 +28,6 @@ public class AttributeVector extends ArrayList<Attribute> {
         Attribute classifiedBrandMatches = new Attribute("classifiedBrandMatches", booleans);
         Attribute categoryMatches = new Attribute("categoryMatches", booleans);
         Attribute imageIdMatches = new Attribute("imageIdMatches", booleans);
-        Attribute skuMatches = new Attribute("skuMatches", booleans);
-        Attribute hanMatches = new Attribute("hanMatches", booleans);
 
         Attribute vectorClass = new Attribute("isMatch", booleans);
 
@@ -43,8 +41,6 @@ public class AttributeVector extends ArrayList<Attribute> {
         this.add(classifiedBrandMatches);
         this.add(categoryMatches);
         this.add(imageIdMatches);
-        this.add(hanMatches);
-        this.add(skuMatches);
         this.add(vectorClass);
     }
 }

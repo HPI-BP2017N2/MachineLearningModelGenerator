@@ -6,10 +6,7 @@ import de.hpi.machinelearning.persistence.LabeledModel;
 import de.hpi.modelgenerator.persistence.ClassifierTrainingState;
 import de.hpi.modelgenerator.persistence.MatchingResult;
 import de.hpi.modelgenerator.persistence.ShopOffer;
-import de.hpi.modelgenerator.persistence.repo.Cache;
-import de.hpi.modelgenerator.persistence.repo.MatchingResultRepository;
-import de.hpi.modelgenerator.persistence.repo.ModelFileRepository;
-import de.hpi.modelgenerator.persistence.repo.ModelMongoRepository;
+import de.hpi.modelgenerator.persistence.repo.*;
 import de.hpi.modelgenerator.properties.ModelGeneratorProperties;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,6 +18,7 @@ import org.deeplearning4j.text.documentiterator.LabelledDocument;
 import org.nd4j.linalg.primitives.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import weka.classifiers.evaluation.Evaluation;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -41,7 +39,7 @@ public class ModelGeneratorService {
     private static final String CATEGORY = "category";
     private static final String BRAND = "brand";
 
-    private final ModelMongoRepository modelRepository;
+    private final ModelRepository modelRepository;
     private final ModelGeneratorProperties properties;
     private final MatchingResultRepository matchingResultRepository;
     private final Cache cache;
@@ -73,6 +71,7 @@ public class ModelGeneratorService {
         log.info("Use {} documents for validation.", testingSet.size());
 
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
+        getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet, "category");
         state.setCurrentlyLearning(false);
         getModelRepository().save(paragraphVectors, CATEGORY);
         log.info("Successfully generated category classifier.");
@@ -99,6 +98,7 @@ public class ModelGeneratorService {
         log.info("Use {} documents for validation.", testingSet.size());
 
         ParagraphVectors paragraphVectors = getNeuralNetClassifier().getParagraphVectors(trainingSet);
+        getNeuralNetClassifier().checkUnlabeledData(paragraphVectors, testingSet, "brand");
         state.setCurrentlyLearning(false);
         getModelRepository().save(paragraphVectors, BRAND);
         log.info("Successfully generated brand classifier.");
@@ -113,22 +113,25 @@ public class ModelGeneratorService {
      * @throws IllegalStateException when brand classifier is not present
      * @throws IOException when brand classifier cannot be deserialized
      */
-    public void generateModel(ClassifierTrainingState state) throws IllegalStateException, IOException {
+    public void generateModel(ClassifierTrainingState state) throws Exception {
         if(state.isCurrentlyLearning()) {
             return;
         }
 
-        if(!getModelRepository().brandClassifierExists()) {
-            throw new IllegalStateException("Brand classifier needs to be generated first.");
+        if(!getModelRepository().brandClassifierExists() || !getModelRepository().categoryClassifierExists()) {
+            throw new IllegalStateException("Brand classifier and Category classifier need to be generated first.");
         }
 
         getClassifier().loadBrandClassifier();
+        getClassifier().loadCategoryClassifier();
         state.setCurrentlyLearning(true);
         setTrainingAndTestingSet();
-        log.info("Start generating training and testing set for model at {}", new Date());
+        log.info("Start generating training set for model at {}", new Date());
         Instances trainingSet = getInstances(getTrainingSet());
+        log.info("Finished generating training set for model at {}", new Date());
+        log.info("Start generating testing set for model at {}", new Date());
         Instances testingSet = getInstances(getTestingSet());
-        log.info("Finished generating training and testing set for model at {}", new Date());
+        log.info("Finished generating testing set for model at {}", new Date());
         List<LabeledModel> models = new LinkedList<>();
         Map<Double, String> scoredModels = new HashMap<>();
 
@@ -144,10 +147,40 @@ public class ModelGeneratorService {
         models.add(getMatchingModels().getJ48(trainingSet));
 
         for(LabeledModel model : models) {
-            double score = getMatchingModels().getClassificationError(model.getModel(), trainingSet);
-            scoredModels.put(score, model.getModelType());
+            Evaluation eval = new Evaluation(trainingSet);
+            eval.evaluateModel(model.getModel(), testingSet);
+            //double score = getMatchingModels().getClassificationError(model.getModel(), trainingSet);
+            //scoredModels.put(score, model.getModelType());
+            System.out.println(eval.toSummaryString("\nResults "+model.getModelType()+"\n======\n", false));
+            System.out.println("Weighted Precision: "+ String.valueOf(eval.weightedPrecision()));
+            System.out.println("Weighted Recall: "+ String.valueOf(eval.weightedRecall()));
+            System.out.println("Weighted FMeasure: "+ String.valueOf(eval.weightedFMeasure()));
+            System.out.println("Weighted AreaUnderROC: "+ String.valueOf(eval.weightedAreaUnderROC()));
+            System.out.println("Weighted MacroFMeasure: "+ String.valueOf(eval.unweightedMacroFmeasure()));
+            System.out.println("Weighted MicroMeasure: "+ String.valueOf(eval.unweightedMicroFmeasure()));
+            System.out.println("ConfusionMatrix: "+ Arrays.deepToString(eval.confusionMatrix()));
+            System.out.println("falseNegative: "+ String.valueOf(eval.numFalseNegatives(0)));
+            System.out.println("falsePositive: "+ String.valueOf(eval.numFalsePositives(0)));
+            System.out.println("trueNegative: "+ String.valueOf(eval.numTrueNegatives(0)));
+            System.out.println("truePositive: "+ String.valueOf(eval.numTruePositives(0)));
+
         }
 
+        for(LabeledModel model : models) {
+            Evaluation eval = new Evaluation(trainingSet);
+            eval.evaluateModel(model.getModel(), testingSet);
+            System.out.println(model.getModelType());
+            System.out.println("ConfusionMatrix: " + Arrays.deepToString(eval.confusionMatrix()));
+            for (double[] x : eval.confusionMatrix())
+            {
+                for (double y : x)
+                {
+                    System.out.print(String.valueOf(y) + " ");
+                }
+                System.out.println();
+            }
+        }
+/*
         Double leastClassificationError = Collections.min(scoredModels.keySet());
         String bestScoredModelType = scoredModels.get(leastClassificationError);
         for(LabeledModel model : models) {
@@ -155,8 +188,10 @@ public class ModelGeneratorService {
                 getModelRepository().save(model.toScoredModel(leastClassificationError));
                 break;
             }
+        }*/
+        for(LabeledModel model : models) {
+                getModelRepository().save(model.toScoredModel(1));
         }
-
         state.setCurrentlyLearning(false);
         log.info("Successfully generated model.");
 
@@ -191,7 +226,6 @@ public class ModelGeneratorService {
             for (Long shopId : shopIds) {
                 completeDataSet.addAll(getMatchingResultRepository().getMatches(shopId, matchesPerShop));
             }
-
             List<Integer> numbers = IntStream.range(0, completeDataSet.size()).boxed().collect(Collectors.toCollection(LinkedList::new));
             Collections.shuffle(numbers);
             int trainingSetSize = (int) (getProperties().getTrainingSetPercentage() * numbers.size());
@@ -211,7 +245,7 @@ public class ModelGeneratorService {
             String category = matchingResult.getHigherLevelIdealoCategory();
             String title = matchingResult.getParsedData().getTitle();
             if(category != null && title != null) {
-                documents.add(getLabelledDocument(title, category));
+                documents.add(getLabelledDocument(title.toLowerCase(), category));
             }
         }
 
@@ -223,10 +257,16 @@ public class ModelGeneratorService {
 
         for(MatchingResult matchingResult : matchingResults) {
             try {
-                ShopOffer shopOffer = getCache().getOffer(matchingResult.getShopId(), matchingResult.getOfferKey());
                 String title = matchingResult.getParsedData().getTitle();
-                if (shopOffer != null && title != null && shopOffer.getBrandName() != null) {
-                    documents.add(getLabelledDocument(title, shopOffer.getBrandName()));
+                if (title != null) {
+                    if ( matchingResult.getIdealoBrand() != null) {
+                        documents.add(getLabelledDocument(title, matchingResult.getIdealoBrand()));
+                    } else {
+                        ShopOffer shopOffer = getCache().getOffer(matchingResult.getShopId(), matchingResult.getOfferKey());
+                        if (shopOffer != null && shopOffer.getBrandName() != null) {
+                            documents.add(getLabelledDocument(title.toLowerCase(), shopOffer.getBrandName()));
+                        }
+                    }
                 }
             } catch (HttpClientErrorException e) {
                 e.printStackTrace();
@@ -248,39 +288,88 @@ public class ModelGeneratorService {
         List<Integer> numbers = IntStream.range(0, matchingResults.size()).boxed().collect(Collectors.toCollection(LinkedList::new));
         Collections.shuffle(numbers);
 
+        log.info("Start adding correct results to instance set at {}", new Date());
         // use 50% of results for matches
-        for(int i = 0; i < numbers.size() / 2; i ++) {
+        Integer numbersSize = numbers.size() / 2;
+
+        for(int i = 0; i < numbersSize; i ++) {
             MatchingResult result = matchingResults.get(numbers.get(i));
             try {
                 ShopOffer shopOffer = getCache().getOffer(result.getShopId(), result.getOfferKey());
                 if(shopOffer == null) continue;
                 String brand = getBrand(result.getParsedData().getTitle());
-                Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), true, brand);
+                String category = getCategory(result.getParsedData().getTitle());
+                Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), true, brand, category);
                 instanceSet.add(instance);
 
             } catch (HttpClientErrorException e) {
                 e.printStackTrace();
             }
         }
+        log.info("Finished adding correct results to instance set at {}", new Date());
 
-        // use 50% of results for not-matches
-        for(int i = numbers.size() / 2; i < numbers.size(); i++) {
-            int nonMatchIndex = getDifferentRandom(i, 0, numbers.size());
-            MatchingResult result = matchingResults.get(numbers.get(i));
-            try {
-                ShopOffer shopOffer = getCache().getOffer(result.getShopId(), matchingResults.get(nonMatchIndex).getOfferKey());
-                if(shopOffer != null) {
-                    String brand = getBrand(result.getParsedData().getTitle());
-                    Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), false, brand);
-                    instanceSet.add(instance);
+        log.info("Start adding incorrect results to instance set based on same brand at {}", new Date());
+        // use 50% of results for not-matches if brand is the same
+        for (int j = 0; j <= 1; j++) {
+            for (int i = numbersSize; i < numbers.size(); i++) {
+                int nonMatchIndex = getDifferentRandom(i, 0, numbers.size());
+                String matchBrand = matchingResults.get(numbers.get(i)).getIdealoBrand();
+                for (MatchingResult result : matchingResults.subList(i - (numbersSize * j), numbers.size())) {
+                    if (result.getIdealoBrand() == matchBrand) {
+                        nonMatchIndex = matchingResults.indexOf(result);
+                        break;
+                    }
                 }
-            } catch (HttpClientErrorException e) {
-                e.printStackTrace();
+                MatchingResult result = matchingResults.get(numbers.get(i));
+                addResultToInstances(instanceSet, result, matchingResults, nonMatchIndex);
             }
+            log.info("Finished adding incorrect results to instance set based on same brand at {}", new Date());
+
+            log.info("Start adding incorrect results to instance set based on same category at {}", new Date());
+            // use 50% of results for not-matches if category is the same
+            for (int i = numbersSize; i < numbers.size(); i++) {
+                int nonMatchIndex = getDifferentRandom(i, 0, numbers.size());
+                String matchCategory = matchingResults.get(numbers.get(i)).getIdealoCategory();
+                for (MatchingResult result : matchingResults.subList(i - (numbersSize * j), numbers.size())) {
+                    if (result.getIdealoCategory() == matchCategory) {
+                        nonMatchIndex = matchingResults.indexOf(result);
+                        break;
+                    }
+                }
+                MatchingResult result = matchingResults.get(numbers.get(i));
+                addResultToInstances(instanceSet, result, matchingResults, nonMatchIndex);
+            }
+            log.info("Finished adding incorrect results to instance set based on same category at {}", new Date());
         }
 
-        instanceSet.setClassIndex(12);
+        instanceSet.setClassIndex(10);
         return instanceSet;
+    }
+
+    private void addResultToInstances(Instances instanceSet, MatchingResult result, List<MatchingResult> matchingResults, int nonMatchIndex) {
+        try {
+            ShopOffer shopOffer = getCache().getOffer(matchingResults.get(nonMatchIndex).getShopId(), matchingResults.get(nonMatchIndex).getOfferKey());
+            if(shopOffer != null) {
+                String brand = getBrand(result.getParsedData().getTitle());
+                String category = getCategory(result.getParsedData().getTitle());
+                Instance instance = new FeatureInstance(shopOffer, result.getParsedData(), false, brand, category);
+                instanceSet.add(instance);
+            }
+        } catch (HttpClientErrorException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getCategory(String offerTitle) {
+        if(offerTitle != null) {
+            Pair<String, Double> pair = getClassifier().getCategory(offerTitle.toLowerCase());
+            if(pair == null) {
+                return null;
+            }
+            return pair.getRight() < getProperties().getLabelThresholdCategory() ? null : pair.getLeft();
+        }
+
+        return null;
     }
 
     private static int getDifferentRandom(int excludedValue, int min, int max) {
@@ -295,11 +384,11 @@ public class ModelGeneratorService {
 
     private String getBrand(String offerTitle) {
         if(offerTitle != null) {
-            Pair<String, Double> pair = getClassifier().getBrand(offerTitle);
+            Pair<String, Double> pair = getClassifier().getBrand(offerTitle.toLowerCase());
             if(pair == null) {
                 return null;
             }
-            return pair.getRight() < getProperties().getLabelThreshold() ? null : pair.getLeft();
+            return pair.getRight() < getProperties().getLabelThresholdBrand() ? null : pair.getLeft();
         }
 
         return null;

@@ -26,7 +26,7 @@ public class ModelFileRepository implements ModelRepository{
         ObjectMapper mapper = new ObjectMapper();
         String path = System.getProperty("user.dir");
         new File(path + "/models").mkdirs();
-        mapper.writeValue(new File(path + "/models/model.json"), model);
+        mapper.writeValue(new File(path + "/models/" +model.getModelType() + ".json"), model);
 
     }
 
@@ -39,8 +39,22 @@ public class ModelFileRepository implements ModelRepository{
     }
 
     @Override
+    public ParagraphVectors getCategoryClassifier() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String path = System.getProperty("user.dir");
+        SerializedParagraphVectors classifier = mapper.readValue(new File(path + "/models/category.json"), SerializedParagraphVectors.class);
+        return classifier.getNeuralNetwork();
+    }
+
+    @Override
     public boolean brandClassifierExists() {
         String path = System.getProperty("user.dir");
         return (new File(path + "/models/brand.json")).exists();
+    }
+
+    @Override
+    public boolean categoryClassifierExists() {
+        String path = System.getProperty("user.dir");
+        return (new File(path + "/models/category.json")).exists();
     }
 }

@@ -140,7 +140,7 @@ public class ModelGeneratorServiceTest {
     }
 
     @Test
-    public void generateModel() throws IOException {
+    public void generateModel() throws Exception {
         doReturn(getParagraphVectors()).when(getNeuralNetClassifier()).getParagraphVectors(anyList());
         doReturn(true).when(getModelRepository()).brandClassifierExists();
         doNothing().when(getModelRepository()).save(any(ScoredModel.class));
@@ -169,7 +169,7 @@ public class ModelGeneratorServiceTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void doNotGenerateModelWhenNoBrandClassifier() throws IOException {
+    public void doNotGenerateModelWhenNoBrandClassifier() throws Exception {
         doReturn(false).when(getModelRepository()).brandClassifierExists();
 
         getService().generateModel(getState());

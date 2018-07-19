@@ -51,7 +51,7 @@ public class ModelGeneratorController {
             @ApiResponse(code = 200, message = "Successfully generated model."),
             @ApiResponse(code = 500, message = "There was an error (serializing the model). Make sure that brand classifier is present.")})
     @RequestMapping(value = "/generateModel", method = RequestMethod.POST)
-    public void generateModel() throws IOException {
+    public void generateModel() throws Exception {
         getService().generateModel(getModelTrainingState());
     }
 
@@ -60,7 +60,7 @@ public class ModelGeneratorController {
             @ApiResponse(code = 200, message = "Successfully generated all classifier."),
             @ApiResponse(code = 500, message = "There was an error (serializing the classifiers).")})
     @RequestMapping(value = "/generateAllClassifiers", method = RequestMethod.POST)
-    public void generateAllClassifiers() throws IOException {
+    public void generateAllClassifiers() throws Exception {
         getService().refreshTrainingAndTestingSet();
         generateCategoryClassifier();
         generateBrandClassifier();

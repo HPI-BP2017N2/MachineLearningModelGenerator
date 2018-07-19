@@ -8,7 +8,8 @@ public class TextSimilarityCalculator {
         if (stringsAreEmpty(left, right)) {
             return -1d;
         }
-
+        left = left.toLowerCase();
+        right = right.toLowerCase();
         Set<String> leftWords = new HashSet<>(getNGramm(left, 3));
         Set<String> rightWords = new HashSet<>(getNGramm(right, 3));
         final Set<String> intersectionSet = getIntersection(leftWords, rightWords);
@@ -20,7 +21,8 @@ public class TextSimilarityCalculator {
         if (stringsAreEmpty(left, right)) {
             return -1d;
         }
-
+        left = left.toLowerCase();
+        right = right.toLowerCase();
         Map<String, Integer> leftVector = getWordOccurenceVector(getNGramm(left, 3));
         Map<String, Integer> rightVector = getWordOccurenceVector(getNGramm(right, 3));
 
